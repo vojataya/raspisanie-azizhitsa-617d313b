@@ -9,6 +9,7 @@ export interface Invite {
   invited_by: string | null;
   created_at: string;
   used_at: string | null;
+  used_by: string | null;
 }
 
 export function useInvites() {
@@ -76,7 +77,27 @@ export function useDeleteInvite() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, usedBy }: { id: string; usedBy: string | null }) => {
+      // If the invite was used, also revoke user access
+      if (usedBy) {
+        // Delete user role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', usedBy);
+        
+        if (roleError) throw roleError;
+
+        // Delete profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', usedBy);
+        
+        if (profileError) throw profileError;
+      }
+
+      // Delete the invite
       const { error } = await supabase
         .from('invites')
         .delete()
@@ -84,9 +105,14 @@ export function useDeleteInvite() {
       
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['invites'] });
-      toast.success('Инвайт удален');
+      queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
+      if (variables.usedBy) {
+        toast.success('Инвайт отменён, доступ пользователя отозван');
+      } else {
+        toast.success('Инвайт удален');
+      }
     },
     onError: () => {
       toast.error('Ошибка при удалении инвайта');

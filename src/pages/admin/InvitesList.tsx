@@ -144,29 +144,35 @@ export default function InvitesList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {!invite.used_at && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Удалить инвайт?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Пользователь {invite.email} не сможет зарегистрироваться
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Отмена</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteInvite.mutate(invite.id)}>
-                                  Удалить
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {invite.used_at ? 'Отозвать доступ?' : 'Удалить инвайт?'}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {invite.used_at 
+                                  ? `Пользователь ${invite.email} потеряет доступ к системе`
+                                  : `Пользователь ${invite.email} не сможет зарегистрироваться`
+                                }
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Отмена</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteInvite.mutate({ id: invite.id, usedBy: invite.used_by })}
+                                className={invite.used_at ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+                              >
+                                {invite.used_at ? 'Отозвать' : 'Удалить'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
