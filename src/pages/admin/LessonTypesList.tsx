@@ -53,17 +53,6 @@ function LessonTypeRow({
         </div>
       </TableCell>
       <TableCell>
-        <span 
-          className="px-2 py-1 rounded text-xs font-bold"
-          style={{ 
-            backgroundColor: lessonType.date_box_color,
-            color: '#fff'
-          }}
-        >
-          {lessonType.name.toUpperCase()}
-        </span>
-      </TableCell>
-      <TableCell>
         <div className="flex items-center gap-2">
           <div
             className="w-4 h-4 rounded border"
@@ -148,7 +137,6 @@ export default function LessonTypesListPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Название</TableHead>
-              <TableHead>Подпись</TableHead>
               <TableHead>Цвета</TableHead>
               <TableHead>Событий</TableHead>
               <TableHead className="text-right">Действия</TableHead>
