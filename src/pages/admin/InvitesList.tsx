@@ -13,13 +13,20 @@ import { Plus, Trash2, Mail, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-const emailSchema = z.string().email('Введите корректный email');
+const emailSchema = z
+  .string()
+  .email('Введите корректный email')
+  .refine((v) => /^[\x00-\x7F]+$/.test(v), {
+    message: 'Только латиница и обычный дефис "-" (без спецсимволов)',
+  });
 
-// Normalize special dash characters to regular hyphen-minus
-const normalizeEmail = (email: string): string => {
-  return email
-    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-') // Various dash types to hyphen
-    .replace(/\s/g, ''); // Remove whitespace
+// Normalize common problematic characters so we store/display a consistent ASCII email.
+const normalizeEmail = (value: string): string => {
+  return value
+    // Various dash types (incl. soft hyphen) to regular hyphen-minus
+    .replace(/[\u00AD\u058A\u1806\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+    // Remove whitespace & zero-width chars
+    .replace(/[\s\u200B-\u200D\u2060\uFEFF]/g, '');
 };
 
 export default function InvitesList() {
@@ -32,8 +39,9 @@ export default function InvitesList() {
 
   const handleCreate = async () => {
     try {
-      emailSchema.parse(email);
-      await createInvite.mutateAsync({ email, role });
+      const normalized = normalizeEmail(email).toLowerCase().trim();
+      emailSchema.parse(normalized);
+      await createInvite.mutateAsync({ email: normalized, role });
       setEmail('');
       setRole('editor');
     } catch (error) {
