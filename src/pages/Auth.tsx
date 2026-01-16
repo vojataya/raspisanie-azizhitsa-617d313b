@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCheckInvite } from '@/hooks/useInvites';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 const authSchema = z.object({
   email: z.string().email('Введите корректный email'),
@@ -18,12 +21,23 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  
+  const { data: invite, isLoading: checkingInvite } = useCheckInvite(
+    activeTab === 'register' ? email : ''
+  );
 
   const handleSubmit = async (mode: 'login' | 'register') => {
     try {
       const validated = authSchema.parse({ email, password });
+      
+      if (mode === 'register' && !invite) {
+        toast.error('Регистрация доступна только по приглашению');
+        return;
+      }
+      
       setLoading(true);
 
       if (mode === 'login') {
@@ -60,6 +74,8 @@ export default function AuthPage() {
     }
   };
 
+  const canRegister = invite !== null && !checkingInvite;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -68,7 +84,7 @@ export default function AuthPage() {
           <CardDescription>Управление расписанием занятий</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Вход</TabsTrigger>
               <TabsTrigger value="register">Регистрация</TabsTrigger>
@@ -108,12 +124,36 @@ export default function AuthPage() {
             </TabsContent>
             
             <TabsContent value="register" className="space-y-4 mt-4">
+              <Alert variant={canRegister ? 'default' : 'destructive'} className="mb-4">
+                <div className="flex items-center gap-2">
+                  {canRegister ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <AlertDescription className="text-green-600">
+                        Приглашение найдено. Роль: {invite?.role === 'admin' ? 'Админ' : 'Редактор'}
+                      </AlertDescription>
+                    </>
+                  ) : email && email.includes('@') && !checkingInvite ? (
+                    <>
+                      <XCircle className="w-4 h-4" />
+                      <AlertDescription>
+                        Приглашение не найдено. Обратитесь к администратору.
+                      </AlertDescription>
+                    </>
+                  ) : (
+                    <AlertDescription>
+                      Регистрация доступна только по приглашению
+                    </AlertDescription>
+                  )}
+                </div>
+              </Alert>
+              
               <div className="space-y-2">
                 <Label htmlFor="register-email">Email</Label>
                 <Input
                   id="register-email"
                   type="email"
-                  placeholder="admin@example.com"
+                  placeholder="Введите email из приглашения"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -127,14 +167,14 @@ export default function AuthPage() {
                   placeholder="Минимум 6 символов"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit('register')}
+                  disabled={loading || !canRegister}
+                  onKeyDown={(e) => e.key === 'Enter' && canRegister && handleSubmit('register')}
                 />
               </div>
               <Button 
                 className="w-full" 
                 onClick={() => handleSubmit('register')}
-                disabled={loading}
+                disabled={loading || !canRegister}
               >
                 {loading ? 'Регистрация...' : 'Зарегистрироваться'}
               </Button>

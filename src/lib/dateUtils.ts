@@ -16,8 +16,22 @@ const MONTHS_SHORT: Record<number, string> = {
   11: 'ДЕК.'
 };
 
+const DAYS_SHORT: Record<number, string> = {
+  0: 'ВС',
+  1: 'ПН',
+  2: 'ВТ',
+  3: 'СР',
+  4: 'ЧТ',
+  5: 'ПТ',
+  6: 'СБ'
+};
+
 export function formatMonthShort(date: Date): string {
   return MONTHS_SHORT[date.getMonth()];
+}
+
+export function formatDayOfWeekShort(date: Date): string {
+  return DAYS_SHORT[date.getDay()];
 }
 
 export function formatDay(date: Date): string {
