@@ -8,6 +8,7 @@ import {
   Settings, 
   LogOut,
   LayoutDashboard,
+  UserPlus,
   Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,8 @@ export function AdminSidebar() {
     { href: '/admin/events', label: 'События', icon: CalendarDays, adminOnly: false },
     { href: '/admin/lesson-types', label: 'Виды занятий', icon: Layers, adminOnly: false },
     { href: '/admin/settings', label: 'Настройки виджета', icon: Settings, adminOnly: false },
-    { href: '/admin/invites', label: 'Доступ', icon: Users, adminOnly: true },
+    { href: '/admin/invites', label: 'Приглашения', icon: UserPlus, adminOnly: true },
+    { href: '/admin/users', label: 'Пользователи', icon: Users, adminOnly: true },
   ];
 
   const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);

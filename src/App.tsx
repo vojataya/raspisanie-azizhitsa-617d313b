@@ -14,6 +14,7 @@ import LessonTypesList from "./pages/admin/LessonTypesList";
 import LessonTypeForm from "./pages/admin/LessonTypeForm";
 import WidgetSettings from "./pages/admin/WidgetSettings";
 import InvitesList from "./pages/admin/InvitesList";
+import UsersList from "./pages/admin/UsersList";
 import ScheduleWidget from "./pages/ScheduleWidget";
 import NotFound from "./pages/NotFound";
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/admin/lesson-types/:id" element={<ProtectedRoute><LessonTypeForm /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><WidgetSettings /></ProtectedRoute>} />
             <Route path="/admin/invites" element={<ProtectedRoute><InvitesList /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><UsersList /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
