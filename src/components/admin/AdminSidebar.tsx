@@ -1,25 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsAdmin } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { 
   CalendarDays, 
   Layers, 
   Settings, 
   LogOut,
-  LayoutDashboard
+  LayoutDashboard,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/admin', label: 'Обзор', icon: LayoutDashboard },
-  { href: '/admin/events', label: 'События', icon: CalendarDays },
-  { href: '/admin/lesson-types', label: 'Виды занятий', icon: Layers },
-  { href: '/admin/settings', label: 'Настройки виджета', icon: Settings },
-];
 
 export function AdminSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+
+  const navItems = [
+    { href: '/admin', label: 'Обзор', icon: LayoutDashboard, adminOnly: false },
+    { href: '/admin/events', label: 'События', icon: CalendarDays, adminOnly: false },
+    { href: '/admin/lesson-types', label: 'Виды занятий', icon: Layers, adminOnly: false },
+    { href: '/admin/settings', label: 'Настройки виджета', icon: Settings, adminOnly: false },
+    { href: '/admin/invites', label: 'Доступ', icon: Users, adminOnly: true },
+  ];
+
+  const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <aside className="w-64 min-h-screen bg-[hsl(var(--admin-sidebar))] text-[hsl(var(--admin-sidebar-foreground))] flex flex-col">
@@ -29,7 +35,7 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== '/admin' && location.pathname.startsWith(item.href));
           
