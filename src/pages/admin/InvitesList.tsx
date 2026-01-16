@@ -77,7 +77,9 @@ export default function InvitesList() {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   placeholder="user@example.com"
                   value={email}
                   onChange={(e) => setEmail(normalizeEmail(e.target.value))}
