@@ -60,7 +60,7 @@ function LessonTypeRow({
             color: '#fff'
           }}
         >
-          {lessonType.label}
+          {lessonType.name.toUpperCase()}
         </span>
       </TableCell>
       <TableCell>

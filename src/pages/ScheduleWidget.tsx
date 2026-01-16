@@ -32,7 +32,7 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
         {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44 bg-muted flex items-center justify-center"><span className="text-muted-foreground">Нет изображения</span></div>}
       </div>
       <div className="p-4" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
-        <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.label}</div>
+        <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
         <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.title}</h3>
         <div className="space-y-1 text-sm opacity-80">
           <div className="flex items-center gap-2"><Clock className="w-4 h-4 flex-shrink-0" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
@@ -61,7 +61,7 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
         <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"><X className="w-5 h-5" /></button>
         {event.image_url && <img src={event.image_url} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
         <div className="p-6 space-y-4">
-          <div><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.label}</span></div>
+          <div><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}</span></div>
           <h2 className="text-2xl font-bold text-foreground">{event.title}</h2>
           {event.description_full && <p className="text-muted-foreground whitespace-pre-wrap">{event.description_full}</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">

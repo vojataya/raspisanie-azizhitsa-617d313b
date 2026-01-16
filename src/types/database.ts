@@ -1,7 +1,6 @@
 export interface LessonType {
   id: string;
   name: string;
-  label: string;
   card_bg_color: string;
   card_bg_opacity: number;
   date_box_color: string;
