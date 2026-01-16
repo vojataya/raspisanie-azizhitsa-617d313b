@@ -136,7 +136,7 @@ export default function EventsListPage() {
                           borderColor: event.lesson_type.date_box_color
                         }}
                       >
-                        {event.lesson_type.label}
+                        {event.lesson_type.name.toUpperCase()}
                       </Badge>
                     </TableCell>
                     <TableCell>

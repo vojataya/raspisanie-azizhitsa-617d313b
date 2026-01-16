@@ -111,7 +111,6 @@ export type Database = {
           date_box_color: string
           id: string
           is_default: boolean
-          label: string
           name: string
           text_color: string
           updated_at: string
@@ -123,7 +122,6 @@ export type Database = {
           date_box_color?: string
           id?: string
           is_default?: boolean
-          label: string
           name: string
           text_color?: string
           updated_at?: string
@@ -135,7 +133,6 @@ export type Database = {
           date_box_color?: string
           id?: string
           is_default?: boolean
-          label?: string
           name?: string
           text_color?: string
           updated_at?: string

@@ -20,7 +20,6 @@ export default function LessonTypeFormPage() {
 
   const [formData, setFormData] = useState({
     name: '',
-    label: '',
     card_bg_color: '#E8D5B7',
     card_bg_opacity: 0.95,
     date_box_color: '#D4A574',
@@ -32,7 +31,6 @@ export default function LessonTypeFormPage() {
     if (lessonType) {
       setFormData({
         name: lessonType.name,
-        label: lessonType.label,
         card_bg_color: lessonType.card_bg_color,
         card_bg_opacity: Number(lessonType.card_bg_opacity),
         date_box_color: lessonType.date_box_color,
@@ -77,7 +75,6 @@ export default function LessonTypeFormPage() {
             <CardHeader><CardTitle>Основная информация</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2"><Label htmlFor="name">Название</Label><Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Курс" /></div>
-              <div className="space-y-2"><Label htmlFor="label">Подпись на карточке</Label><Input id="label" value={formData.label} onChange={(e) => handleChange('label', e.target.value.toUpperCase())} placeholder="КУРС" /></div>
             </CardContent>
           </Card>
           <Card>
@@ -101,7 +98,7 @@ export default function LessonTypeFormPage() {
               <div className="absolute top-3 left-3 z-10 rounded-lg px-3 py-2 text-center" style={{ backgroundColor: formData.date_box_color }}><div className="text-white text-xs font-bold">ЯНВ.</div><div className="text-white text-2xl font-bold">15</div></div>
               <div className="h-40 bg-muted" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div className="p-4" style={{ backgroundColor: hexToRgba(formData.card_bg_color, formData.card_bg_opacity), color: formData.text_color }}>
-                <div className="text-xs font-bold mb-1" style={{ color: formData.date_box_color }}>{formData.label || 'КУРС'}</div>
+                <div className="text-xs font-bold mb-1" style={{ color: formData.date_box_color }}>{formData.name.toUpperCase() || 'КУРС'}</div>
                 <h3 className="font-bold mb-2">{formData.name || 'Название события'}</h3>
                 <div className="flex items-center gap-1 text-sm opacity-80"><Clock className="w-3 h-3" /><span>10:00 – 12:00</span></div>
                 <div className="flex items-center gap-1 text-sm opacity-80 mt-1"><MapPin className="w-3 h-3" /><span>Санкт-Петербург</span></div>
