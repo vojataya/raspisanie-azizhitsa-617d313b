@@ -15,6 +15,13 @@ import { z } from 'zod';
 
 const emailSchema = z.string().email('Введите корректный email');
 
+// Normalize special dash characters to regular hyphen-minus
+const normalizeEmail = (email: string): string => {
+  return email
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-') // Various dash types to hyphen
+    .replace(/\s/g, ''); // Remove whitespace
+};
+
 export default function InvitesList() {
   const { data: invites, isLoading } = useInvites();
   const createInvite = useCreateInvite();
@@ -65,7 +72,7 @@ export default function InvitesList() {
                   type="email"
                   placeholder="user@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(normalizeEmail(e.target.value))}
                 />
               </div>
               <div className="w-full md:w-40 space-y-2">
