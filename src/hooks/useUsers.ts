@@ -72,27 +72,22 @@ export function useDeleteUser() {
   
   return useMutation({
     mutationFn: async (userId: string) => {
-      // Delete from user_roles
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
       
-      if (roleError) throw roleError;
-
-      // Delete from profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       
-      if (profileError) throw profileError;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
-      toast.success('Пользователь удален');
+      queryClient.invalidateQueries({ queryKey: ['invites'] });
+      toast.success('Пользователь полностью удален');
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Delete user error:', error);
       toast.error('Ошибка при удалении пользователя');
     },
   });
