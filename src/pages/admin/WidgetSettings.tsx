@@ -14,8 +14,8 @@ export default function WidgetSettingsPage() {
   const updateSettings = useUpdateWidgetSettings();
   const [copied, setCopied] = useState(false);
 
-  const widgetUrl = `${window.location.origin}/schedule-widget`;
-  const embedCode = `<iframe src="${widgetUrl}" style="width:100%; border:0; min-height:800px;" loading="lazy"></iframe>`;
+  const publishedUrl = 'https://raspisanie-azizhitsa.lovable.app/schedule-widget';
+  const embedCode = `<iframe src="${publishedUrl}" style="width:100%; border:0; min-height:800px;" loading="lazy"></iframe>`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -51,8 +51,8 @@ export default function WidgetSettingsPage() {
           <CardContent className="space-y-4">
             <div className="relative"><pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">{embedCode}</pre><Button size="icon" variant="outline" className="absolute top-2 right-2" onClick={() => copyToClipboard(embedCode)}>{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}</Button></div>
             <div className="flex gap-4">
-              <Button variant="outline" asChild><a href={widgetUrl} target="_blank" rel="noopener noreferrer">Открыть виджет</a></Button>
-              <Button variant="outline" onClick={() => copyToClipboard(widgetUrl)}>Копировать ссылку</Button>
+              <Button variant="outline" asChild><a href={publishedUrl} target="_blank" rel="noopener noreferrer">Открыть виджет</a></Button>
+              <Button variant="outline" onClick={() => copyToClipboard(publishedUrl)}>Копировать ссылку</Button>
             </div>
           </CardContent>
         </Card>
