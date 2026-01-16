@@ -45,14 +45,24 @@ export function useCheckInvite(email: string) {
   });
 }
 
+// Normalize special dashes and invisible chars to ensure clean ASCII email
+const normalizeEmail = (value: string): string => {
+  return value
+    .replace(/[\u00AD\u058A\u1806\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+    .replace(/[\s\u200B-\u200D\u2060\uFEFF]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
 export function useCreateInvite() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async ({ email, role }: { email: string; role: 'admin' | 'editor' }) => {
+      const normalizedEmail = normalizeEmail(email);
       const { data, error } = await supabase
         .from('invites')
-        .insert({ email: email.toLowerCase().trim(), role })
+        .insert({ email: normalizedEmail, role })
         .select()
         .single();
       
