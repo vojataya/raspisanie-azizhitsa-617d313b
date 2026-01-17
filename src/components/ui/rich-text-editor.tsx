@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   Bold, 
@@ -35,27 +35,34 @@ interface ToolbarButtonProps {
   active?: boolean;
 }
 
-const ToolbarButton = ({ icon, title, onClick, active }: ToolbarButtonProps) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className={cn(
-          "h-8 w-8 p-0",
-          active && "bg-accent text-accent-foreground"
-        )}
-        onClick={onClick}
-      >
-        {icon}
-      </Button>
-    </TooltipTrigger>
-    <TooltipContent side="top">
-      <p>{title}</p>
-    </TooltipContent>
-  </Tooltip>
+const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
+  ({ icon, title, onClick, active }, ref) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          ref={ref}
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 w-8 p-0",
+            active && "bg-accent text-accent-foreground"
+          )}
+          onMouseDown={(e) => {
+            e.preventDefault(); // Prevent losing focus/selection
+          }}
+          onClick={onClick}
+        >
+          {icon}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p>{title}</p>
+      </TooltipContent>
+    </Tooltip>
+  )
 );
+ToolbarButton.displayName = 'ToolbarButton';
 
 export const RichTextEditor = ({
   value,
