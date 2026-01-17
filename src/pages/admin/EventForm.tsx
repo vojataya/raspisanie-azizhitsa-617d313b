@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import { ArrowLeft, Upload, X, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 export default function EventFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -240,22 +240,21 @@ export default function EventFormPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start_at">Начало *</Label>
-                  <Input
-                    id="start_at"
-                    type="datetime-local"
+                  <Label>Начало *</Label>
+                  <DateTimePicker
                     value={formData.start_at}
-                    onChange={(e) => handleChange('start_at', e.target.value)}
+                    onChange={(value) => handleChange('start_at', value)}
+                    placeholder="Выберите дату и время начала"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_at">Окончание *</Label>
-                  <Input
-                    id="end_at"
-                    type="datetime-local"
+                  <Label>Окончание *</Label>
+                  <DateTimePicker
                     value={formData.end_at}
-                    onChange={(e) => handleChange('end_at', e.target.value)}
+                    onChange={(value) => handleChange('end_at', value)}
+                    placeholder="Выберите дату и время окончания"
+                    defaultDate={formData.start_at ? new Date(formData.start_at) : undefined}
                   />
                 </div>
               </div>
