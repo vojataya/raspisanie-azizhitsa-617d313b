@@ -4,7 +4,6 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -20,6 +19,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { ArrowLeft, Upload, X, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 export default function EventFormPage() {
   const { id } = useParams();
@@ -335,24 +335,22 @@ export default function EventFormPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="description_short">Краткое описание</Label>
-                <Textarea
-                  id="description_short"
+                <Label>Краткое описание</Label>
+                <RichTextEditor
                   value={formData.description_short}
-                  onChange={(e) => handleChange('description_short', e.target.value)}
+                  onChange={(value) => handleChange('description_short', value)}
                   placeholder="Краткое описание для превью"
-                  rows={2}
+                  minHeight="60px"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description_full">Полное описание</Label>
-                <Textarea
-                  id="description_full"
+                <Label>Полное описание</Label>
+                <RichTextEditor
                   value={formData.description_full}
-                  onChange={(e) => handleChange('description_full', e.target.value)}
+                  onChange={(value) => handleChange('description_full', value)}
                   placeholder="Подробное описание события"
-                  rows={6}
+                  minHeight="150px"
                 />
               </div>
             </CardContent>
