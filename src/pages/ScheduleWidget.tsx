@@ -22,9 +22,9 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
   };
 
   return (
-    <div onClick={onClick} className="cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300" style={{ boxShadow: 'var(--widget-shadow)' }}>
+    <div onClick={onClick} className="cursor-pointer overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300" style={{ boxShadow: 'var(--widget-shadow)' }}>
       <div className="relative">
-        <div className="absolute top-3 left-3 z-10 rounded-lg px-3 py-2 text-center shadow-md" style={{ backgroundColor: lt.date_box_color }}>
+        <div className="absolute top-3 left-3 z-10 px-3 py-2 text-center shadow-md" style={{ backgroundColor: lt.date_box_color }}>
           <div className="text-white text-xs font-bold">{formatDayOfWeekShort(date)}</div>
           <div className="text-white text-2xl font-bold leading-none">{formatDay(date)}</div>
           <div className="text-white text-xs font-bold">{formatMonthShort(date)}</div>
@@ -98,7 +98,7 @@ export default function ScheduleWidget() {
   };
 
   return (
-    <div className="min-h-screen bg-background widget-container">
+    <div className="min-h-screen bg-transparent widget-container">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <Popover>
