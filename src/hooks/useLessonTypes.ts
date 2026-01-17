@@ -69,11 +69,11 @@ export function useUpdateLessonType() {
         .from('lesson_types')
         .update(updates)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
       
       if (error) throw error;
-      return data as LessonType;
+      if (!data || data.length === 0) throw new Error('Запись не найдена');
+      return data[0] as LessonType;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-types'] });
