@@ -120,3 +120,21 @@ body:has(.widget-container) {
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.5);
 }
+
+/* Prose list styles for popup descriptions */
+.prose ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.prose li {
+  display: list-item !important;
+  margin: 0.25rem 0 !important;
+}
