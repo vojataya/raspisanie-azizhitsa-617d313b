@@ -2,18 +2,18 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 const MONTHS_SHORT: Record<number, string> = {
-  0: 'ЯНВ.',
-  1: 'ФЕВ.',
-  2: 'МАР.',
-  3: 'АПР.',
+  0: 'ЯНВ',
+  1: 'ФЕВ',
+  2: 'МАР',
+  3: 'АПР',
   4: 'МАЙ',
-  5: 'ИЮН.',
-  6: 'ИЮЛ.',
-  7: 'АВГ.',
-  8: 'СЕН.',
-  9: 'ОКТ.',
-  10: 'НОЯ.',
-  11: 'ДЕК.'
+  5: 'ИЮН',
+  6: 'ИЮЛ',
+  7: 'АВГ',
+  8: 'СЕН',
+  9: 'ОКТ',
+  10: 'НОЯ',
+  11: 'ДЕК'
 };
 
 const DAYS_SHORT: Record<number, string> = {
