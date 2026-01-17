@@ -62,7 +62,7 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }} onClick={(e) => e.stopPropagation()}>
+      <div className="relative bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ color: lt.text_color }} onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white shadow-md transition-colors" style={{ color: '#000' }}><X className="w-5 h-5" /></button>
         {event.image_url && <img src={event.image_url} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
         <div className="p-6 space-y-4">
