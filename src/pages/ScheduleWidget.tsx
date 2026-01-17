@@ -54,21 +54,26 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
 
   const lt = event.lesson_type;
 
+  const hexToRgba = (hex: string, opacity: number) => {
+    const r = parseInt(hex.slice(1, 3), 16); const g = parseInt(hex.slice(3, 5), 16); const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"><X className="w-5 h-5" /></button>
+      <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }} onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white shadow-md transition-colors" style={{ color: '#000' }}><X className="w-5 h-5" /></button>
         {event.image_url && <img src={event.image_url} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
         <div className="p-6 space-y-4">
-          <div><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}</span></div>
-          <h2 className="text-2xl font-bold text-foreground">{event.title}</h2>
-          {event.description_full && <div className="text-muted-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: event.description_full }} />}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-            <div><div className="text-xs font-bold text-muted-foreground mb-1">КОГДА</div><div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatFullDate(event.start_at)}</span></div><div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div></div>
-            {event.location && <div><div className="text-xs font-bold text-muted-foreground mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
+          <div><span className="text-xs font-bold px-2 py-1" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}</span></div>
+          <h2 className="text-2xl font-bold">{event.title}</h2>
+          {event.description_full && <div className="prose prose-sm max-w-none opacity-80" style={{ color: lt.text_color }} dangerouslySetInnerHTML={{ __html: event.description_full }} />}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-current/20">
+            <div><div className="text-xs font-bold opacity-60 mb-1">КОГДА</div><div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatFullDate(event.start_at)}</span></div><div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div></div>
+            {event.location && <div><div className="text-xs font-bold opacity-60 mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
           </div>
-          {event.teacher && <div className="flex items-center gap-2 pt-4 border-t"><User className="w-4 h-4" /><span className="font-medium">{event.teacher}</span></div>}
+          {event.teacher && <div className="flex items-center gap-2 pt-4 border-t border-current/20"><User className="w-4 h-4" /><span className="font-medium">{event.teacher}</span></div>}
         </div>
       </div>
     </div>
