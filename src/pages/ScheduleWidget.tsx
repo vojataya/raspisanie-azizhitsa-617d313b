@@ -22,7 +22,7 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
   };
 
   return (
-    <div onClick={onClick} className="cursor-pointer overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300" style={{ boxShadow: 'var(--widget-shadow)' }}>
+    <div onClick={onClick} className="cursor-pointer overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col" style={{ boxShadow: 'var(--widget-shadow)' }}>
       <div className="relative">
         <div className="absolute top-3 left-3 z-10 px-3 py-2 text-center shadow-md" style={{ backgroundColor: lt.date_box_color }}>
           <div className="text-white text-xs font-bold">{formatDayOfWeekShort(date)}</div>
@@ -31,10 +31,10 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
         </div>
         {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44 bg-muted flex items-center justify-center"><span className="text-muted-foreground">Нет изображения</span></div>}
       </div>
-      <div className="p-4 min-h-[140px] flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
+      <div className="p-4 flex-1 flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
         <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
         <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.title}</h3>
-        <div className="space-y-1 text-sm opacity-80">
+        <div className="space-y-1 text-sm opacity-80 mt-auto">
           <div className="flex items-center gap-2"><Clock className="w-4 h-4 flex-shrink-0" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
           {event.teacher && <div className="flex items-center gap-2"><User className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.teacher}</span></div>}
           {event.location && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.location}</span></div>}
