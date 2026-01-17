@@ -63,7 +63,7 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
         <div className="p-6 space-y-4">
           <div><span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}</span></div>
           <h2 className="text-2xl font-bold text-foreground">{event.title}</h2>
-          {event.description_full && <p className="text-muted-foreground whitespace-pre-wrap">{event.description_full}</p>}
+          {event.description_full && <div className="text-muted-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: event.description_full }} />}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
             <div><div className="text-xs font-bold text-muted-foreground mb-1">КОГДА</div><div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatFullDate(event.start_at)}</span></div><div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div></div>
             {event.location && <div><div className="text-xs font-bold text-muted-foreground mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
