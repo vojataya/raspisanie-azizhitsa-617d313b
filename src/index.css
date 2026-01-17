@@ -95,6 +95,12 @@ All colors MUST be HSL.
 /* Widget iframe styles */
 .widget-container {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: transparent !important;
+}
+
+/* Override body background when widget is embedded */
+body:has(.widget-container) {
+  background: transparent !important;
 }
 
 /* Custom scrollbar for admin */
