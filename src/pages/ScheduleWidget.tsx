@@ -29,7 +29,7 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
           <div className="text-white text-2xl font-bold leading-none">{formatDay(date)}</div>
           <div className="text-white text-xs font-bold">{formatMonthShort(date)}</div>
         </div>
-        {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44 bg-muted flex items-center justify-center"><span className="text-muted-foreground">Нет изображения</span></div>}
+        {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)) }} />}
       </div>
       <div className="p-4 flex-1 flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
         <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
