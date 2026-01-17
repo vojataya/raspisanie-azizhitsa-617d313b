@@ -31,13 +31,13 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
         </div>
         {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44 bg-muted flex items-center justify-center"><span className="text-muted-foreground">Нет изображения</span></div>}
       </div>
-      <div className="p-4" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
+      <div className="p-4 min-h-[140px] flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
         <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
         <h3 className="font-bold text-lg mb-2 line-clamp-2">{event.title}</h3>
-        <div className="space-y-1 text-sm opacity-80">
+        <div className="space-y-1 text-sm opacity-80 mt-auto">
           <div className="flex items-center gap-2"><Clock className="w-4 h-4 flex-shrink-0" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
-          {event.teacher && <div className="flex items-center gap-2"><User className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.teacher}</span></div>}
-          {event.location && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.location}</span></div>}
+          <div className="flex items-center gap-2"><User className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.teacher || '\u00A0'}</span></div>
+          <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.location || '\u00A0'}</span></div>
         </div>
       </div>
     </div>
