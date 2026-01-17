@@ -187,7 +187,15 @@ export const RichTextEditor = ({
         contentEditable
         className={cn(
           "px-3 py-2 text-sm bg-background focus:outline-none",
-          "prose prose-sm max-w-none",
+          // Basic rich-text styling (Tailwind reset removes list markers by default)
+          "[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2",
+          "[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2",
+          "[&_li]:my-1",
+          "[&_a]:text-primary [&_a]:underline",
+          "[&_b]:font-semibold [&_strong]:font-semibold",
+          "[&_i]:italic [&_em]:italic",
+          "[&_u]:underline",
+          "[&_s]:line-through",
           "[&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-muted-foreground [&:empty]:before:pointer-events-none"
         )}
         style={{ minHeight }}
