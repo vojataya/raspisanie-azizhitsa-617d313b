@@ -33,7 +33,7 @@ function CalendarEventItem({ event, onClick }: { event: EventWithLessonType; onC
         color: lt.text_color
       }}
     >
-      <div className="font-medium truncate" title={event.title}>{event.title}</div>
+      <div className="font-medium break-words">{event.title}</div>
       <div className="flex items-center gap-1 mt-0.5 opacity-80">
         <span className="font-semibold" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</span>
         {event.mode && <span className="mx-0.5">·</span>}
