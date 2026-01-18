@@ -63,18 +63,47 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
     <>
       {/* Full-screen overlay fixed to viewport */}
       <div 
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" 
         onClick={onClose}
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9998
+        }}
       />
       {/* Popup container fixed to viewport */}
       <div 
-        className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto pointer-events-none"
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          overflowY: 'auto',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          padding: '20px 16px'
+        }}
       >
         <div 
-          className="relative bg-white max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl pointer-events-auto mx-4 mt-5 mb-5" 
-          style={{ color: lt.text_color }} 
+          style={{ 
+            position: 'relative',
+            backgroundColor: '#fff', 
+            maxWidth: '672px', 
+            width: '100%', 
+            maxHeight: '85vh', 
+            overflowY: 'auto', 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            pointerEvents: 'auto',
+            color: lt.text_color
+          }} 
           onClick={(e) => e.stopPropagation()}
         >
           <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white shadow-md transition-colors" style={{ color: '#000' }}><X className="w-5 h-5" /></button>
