@@ -41,6 +41,7 @@ export default function EventFormPage() {
     location: '',
     start_at: '',
     end_at: '',
+    schedule: '',
     description_short: '',
     description_full: '',
     teacher: '',
@@ -59,6 +60,7 @@ export default function EventFormPage() {
         location: event.location || '',
         start_at: formatDateTimeLocal(event.start_at),
         end_at: formatDateTimeLocal(event.end_at),
+        schedule: event.schedule || '',
         description_short: event.description_short || '',
         description_full: event.description_full || '',
         teacher: event.teacher || '',
@@ -123,6 +125,7 @@ export default function EventFormPage() {
       location: formData.location || null,
       start_at: new Date(formData.start_at).toISOString(),
       end_at: new Date(formData.end_at).toISOString(),
+      schedule: formData.schedule || null,
       description_short: formData.description_short || null,
       description_full: formData.description_full || null,
       teacher: formData.teacher || null,
@@ -237,7 +240,7 @@ export default function EventFormPage() {
             <CardHeader>
               <CardTitle>Дата и время</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Начало *</Label>
@@ -257,6 +260,16 @@ export default function EventFormPage() {
                     defaultDate={formData.start_at ? new Date(formData.start_at) : undefined}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="schedule">График</Label>
+                <Input
+                  id="schedule"
+                  value={formData.schedule}
+                  onChange={(e) => handleChange('schedule', e.target.value)}
+                  placeholder="Например: каждую среду"
+                />
               </div>
             </CardContent>
           </Card>

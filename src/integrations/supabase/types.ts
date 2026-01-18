@@ -26,6 +26,7 @@ export type Database = {
           lesson_type_id: string
           location: string | null
           mode: string | null
+          schedule: string | null
           start_at: string
           teacher: string | null
           title: string
@@ -42,6 +43,7 @@ export type Database = {
           lesson_type_id: string
           location?: string | null
           mode?: string | null
+          schedule?: string | null
           start_at: string
           teacher?: string | null
           title: string
@@ -58,6 +60,7 @@ export type Database = {
           lesson_type_id?: string
           location?: string | null
           mode?: string | null
+          schedule?: string | null
           start_at?: string
           teacher?: string | null
           title?: string

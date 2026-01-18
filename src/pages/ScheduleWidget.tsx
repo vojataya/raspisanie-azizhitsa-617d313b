@@ -5,7 +5,7 @@ import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { EventWithLessonType } from '@/types/database';
 import { formatMonthShort, formatDay, formatDayOfWeekShort, formatTimeRange, formatFullDate } from '@/lib/dateUtils';
 import { parseISO } from 'date-fns';
-import { MapPin, Clock, X, Calendar, User, ChevronDown, Search } from 'lucide-react';
+import { MapPin, Clock, X, Calendar, User, ChevronDown, Search, Monitor, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,7 +39,9 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
         <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
         <h3 className="font-bold text-lg mb-2">{event.title}</h3>
         <div className="space-y-1 text-sm opacity-80 mt-auto">
+          {event.schedule && <div className="flex items-center gap-2"><Repeat className="w-4 h-4 flex-shrink-0" /><span>{event.schedule}</span></div>}
           <div className="flex items-center gap-2"><Clock className="w-4 h-4 flex-shrink-0" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
+          {event.mode && <div className="flex items-center gap-2"><Monitor className="w-4 h-4 flex-shrink-0" /><span>{event.mode}</span></div>}
           {event.teacher && <div className="flex items-center gap-2"><User className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.teacher}</span></div>}
           {event.location && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.location}</span></div>}
         </div>
@@ -69,8 +71,16 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
           <h2 className="text-2xl font-bold">{event.title}</h2>
           {event.description_full && <div className="prose prose-sm max-w-none opacity-80" style={{ color: lt.text_color }} dangerouslySetInnerHTML={{ __html: event.description_full }} />}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-current/20">
-            <div><div className="text-xs font-bold opacity-60 mb-1">КОГДА</div><div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatFullDate(event.start_at)}</span></div><div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div></div>
-            {event.location && <div><div className="text-xs font-bold opacity-60 mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
+            <div>
+              <div className="text-xs font-bold opacity-60 mb-1">КОГДА</div>
+              <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatFullDate(event.start_at)}</span></div>
+              {event.schedule && <div className="flex items-center gap-2 mt-1"><Repeat className="w-4 h-4" /><span>{event.schedule}</span></div>}
+              <div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
+            </div>
+            <div className="space-y-2">
+              {event.mode && <div><div className="text-xs font-bold opacity-60 mb-1">ФОРМАТ</div><div className="flex items-center gap-2"><Monitor className="w-4 h-4" /><span>{event.mode}</span></div></div>}
+              {event.location && <div><div className="text-xs font-bold opacity-60 mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
+            </div>
           </div>
           {event.teacher && <div className="flex items-center gap-2 pt-4 border-t border-current/20"><User className="w-4 h-4" /><span className="font-medium">{event.teacher}</span></div>}
         </div>
