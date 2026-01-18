@@ -14,7 +14,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { ru } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { ViewToggle, ViewMode } from '@/components/widget/ViewToggle';
-import { CalendarView } from '@/components/widget/CalendarView';
+import { CalendarView, CalendarMode } from '@/components/widget/CalendarView';
 import { MobileCalendarView } from '@/components/widget/MobileCalendarView';
 import { useIsMobile } from '@/hooks/use-mobile';
 function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
@@ -90,6 +90,7 @@ export default function ScheduleWidget() {
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [calendarWeek, setCalendarWeek] = useState<Date>(new Date());
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>('month');
   const isMobile = useIsMobile();
 
   // When embedded as an iframe (e.g., on Tilda), notify the parent about our height
@@ -267,7 +268,11 @@ export default function ScheduleWidget() {
           <CalendarView
             events={filteredEvents || []}
             currentMonth={calendarMonth}
+            currentWeek={calendarWeek}
+            calendarMode={calendarMode}
             onMonthChange={setCalendarMonth}
+            onWeekChange={setCalendarWeek}
+            onModeChange={setCalendarMode}
             onEventClick={setSelectedEvent}
           />
         )}

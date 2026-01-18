@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, TouchEvent } from 'react';
+import { useMemo, useRef, TouchEvent } from 'react';
 import { EventWithLessonType } from '@/types/database';
 import { parseISO, format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -19,68 +19,37 @@ const hexToRgba = (hex: string, opacity: number) => {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-const MAX_VISIBLE_EVENTS = 2;
-
-function MobileEventItem({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
+function WeekEventItem({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
   const lt = event.lesson_type;
   const startTime = format(parseISO(event.start_at), 'HH:mm');
 
   return (
     <div
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className="cursor-pointer p-2 mb-1.5 text-sm hover:opacity-80 transition-opacity"
+      className="cursor-pointer p-3 text-sm hover:opacity-80 transition-opacity flex items-start gap-3"
       style={{ 
         backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)),
         borderLeft: `4px solid ${lt.date_box_color}`,
         color: lt.text_color
       }}
     >
-      <div className="flex items-center gap-1.5 text-xs opacity-70 mb-0.5">
-        <Clock className="w-3 h-3" />
-        <span className="font-medium">{startTime}</span>
+      {/* Time column */}
+      <div className="flex-shrink-0 flex items-center gap-1.5 text-xs font-medium opacity-80 pt-0.5">
+        <Clock className="w-3.5 h-3.5" />
+        <span>{startTime}</span>
       </div>
-      <div className="font-medium leading-tight line-clamp-2">{event.title}</div>
-    </div>
-  );
-}
-
-function MoreEventsButton({ count, onClick }: { count: number; onClick: () => void }) {
-  return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className="w-full text-center text-xs font-medium text-primary py-1.5 hover:bg-primary/10 transition-colors"
-    >
-      + ещё {count}
-    </button>
-  );
-}
-
-function DayEventsPopup({ 
-  events, 
-  date, 
-  onEventClick, 
-  onClose 
-}: { 
-  events: EventWithLessonType[]; 
-  date: Date;
-  onEventClick: (event: EventWithLessonType) => void; 
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center p-4 pt-16" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/40" />
-      <div className="relative bg-white w-full max-w-sm shadow-xl max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b p-3 font-semibold text-center">
-          {format(date, 'd MMMM, EEEE', { locale: ru })}
-        </div>
-        <div className="p-3 space-y-2">
-          {events.map(event => (
-            <MobileEventItem 
-              key={event.id} 
-              event={event} 
-              onClick={() => { onClose(); onEventClick(event); }} 
-            />
-          ))}
+      
+      {/* Content column */}
+      <div className="flex-1 min-w-0">
+        <div className="font-medium leading-tight line-clamp-2">{event.title}</div>
+        <div className="flex items-center gap-2 mt-1 text-xs opacity-70">
+          <span className="font-semibold" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</span>
+          {event.mode && (
+            <>
+              <span>·</span>
+              <span>{event.mode.toUpperCase()}</span>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -88,7 +57,6 @@ function DayEventsPopup({
 }
 
 export function MobileCalendarView({ events, currentWeek, onWeekChange, onEventClick }: MobileCalendarViewProps) {
-  const [expandedDay, setExpandedDay] = useState<{ date: Date; events: EventWithLessonType[] } | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -152,7 +120,8 @@ export function MobileCalendarView({ events, currentWeek, onWeekChange, onEventC
     touchEndX.current = null;
   };
 
-  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weekDaysFull = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+  const weekDaysShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
   return (
     <div className="bg-white shadow-lg">
@@ -167,20 +136,11 @@ export function MobileCalendarView({ events, currentWeek, onWeekChange, onEventC
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
-
-        {/* Weekday headers */}
-        <div className="grid grid-cols-7 border-t">
-          {weekDays.map((day, idx) => (
-            <div key={day} className="p-2 text-center text-xs font-medium text-muted-foreground border-r last:border-r-0">
-              {day}
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Week grid with swipe support */}
+      {/* Vertical week list with swipe support */}
       <div 
-        className="grid grid-cols-7"
+        className="divide-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -189,49 +149,46 @@ export function MobileCalendarView({ events, currentWeek, onWeekChange, onEventC
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayEvents = eventsByDate.get(dateKey) || [];
           const isToday = isSameDay(day, new Date());
-          const visibleEvents = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
-          const hiddenCount = dayEvents.length - MAX_VISIBLE_EVENTS;
+          const dayNumber = format(day, 'd');
 
           return (
-            <div
-              key={index}
-              className="min-h-[120px] border-r border-b last:border-r-0 p-1.5 flex flex-col"
-              onClick={() => dayEvents.length > 0 && setExpandedDay({ date: day, events: dayEvents })}
-            >
-              <div className={`text-sm font-semibold mb-1.5 w-7 h-7 flex items-center justify-center mx-auto ${
-                isToday ? 'bg-primary text-primary-foreground' : ''
-              }`}>
-                {format(day, 'd')}
+            <div key={index} className="p-3">
+              {/* Day header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-10 h-10 flex items-center justify-center font-bold text-lg ${
+                  isToday ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+                }`}>
+                  {dayNumber}
+                </div>
+                <div>
+                  <div className="font-medium text-sm hidden sm:block">{weekDaysFull[index]}</div>
+                  <div className="font-medium text-sm sm:hidden">{weekDaysShort[index]}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(day, 'd MMMM', { locale: ru })}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 space-y-1">
-                {visibleEvents.map(event => (
-                  <MobileEventItem
-                    key={event.id}
-                    event={event}
-                    onClick={() => onEventClick(event)}
-                  />
-                ))}
-                {hiddenCount > 0 && (
-                  <MoreEventsButton 
-                    count={hiddenCount} 
-                    onClick={() => setExpandedDay({ date: day, events: dayEvents })}
-                  />
-                )}
-              </div>
+
+              {/* Events list */}
+              {dayEvents.length > 0 ? (
+                <div className="space-y-2 ml-13">
+                  {dayEvents.map(event => (
+                    <WeekEventItem
+                      key={event.id}
+                      event={event}
+                      onClick={() => onEventClick(event)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground ml-13 py-2">
+                  Нет событий
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-
-      {/* Day events popup */}
-      {expandedDay && (
-        <DayEventsPopup
-          events={expandedDay.events}
-          date={expandedDay.date}
-          onEventClick={onEventClick}
-          onClose={() => setExpandedDay(null)}
-        />
-      )}
     </div>
   );
 }
