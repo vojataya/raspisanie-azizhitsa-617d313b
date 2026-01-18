@@ -208,7 +208,7 @@ export function CalendarView({
               type="single" 
               value={calendarMode} 
               onValueChange={(value) => value && onModeChange(value as CalendarMode)}
-              className="border"
+              className="border rounded-md"
             >
               <ToggleGroupItem value="month" aria-label="Месяц" className="text-xs px-3">
                 Месяц

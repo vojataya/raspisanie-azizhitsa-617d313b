@@ -261,7 +261,11 @@ export default function ScheduleWidget() {
           <MobileCalendarView
             events={filteredEvents || []}
             currentWeek={calendarWeek}
+            currentMonth={calendarMonth}
+            calendarMode={calendarMode}
             onWeekChange={setCalendarWeek}
+            onMonthChange={setCalendarMonth}
+            onModeChange={setCalendarMode}
             onEventClick={setSelectedEvent}
           />
         ) : (
