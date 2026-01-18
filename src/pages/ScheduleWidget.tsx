@@ -243,11 +243,13 @@ export default function ScheduleWidget() {
         </div>
 
         {/* Content */}
-        {isLoading ? (
+        {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : viewMode === 'tile' ? (
+        )}
+        
+        {!isLoading && viewMode === 'tile' && (
           filteredEvents && filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredEvents.map(event => (
@@ -257,28 +259,32 @@ export default function ScheduleWidget() {
           ) : (
             <div className="text-center py-12 text-muted-foreground">Нет событий для отображения</div>
           )
-        ) : isMobile ? (
-          <MobileCalendarView
-            events={filteredEvents || []}
-            currentWeek={calendarWeek}
-            currentMonth={calendarMonth}
-            calendarMode={calendarMode}
-            onWeekChange={setCalendarWeek}
-            onMonthChange={setCalendarMonth}
-            onModeChange={setCalendarMode}
-            onEventClick={setSelectedEvent}
-          />
-        ) : (
-          <CalendarView
-            events={filteredEvents || []}
-            currentMonth={calendarMonth}
-            currentWeek={calendarWeek}
-            calendarMode={calendarMode}
-            onMonthChange={setCalendarMonth}
-            onWeekChange={setCalendarWeek}
-            onModeChange={setCalendarMode}
-            onEventClick={setSelectedEvent}
-          />
+        )}
+        
+        {!isLoading && viewMode === 'calendar' && (
+          isMobile ? (
+            <MobileCalendarView
+              events={filteredEvents || []}
+              currentWeek={calendarWeek}
+              currentMonth={calendarMonth}
+              calendarMode={calendarMode}
+              onWeekChange={setCalendarWeek}
+              onMonthChange={setCalendarMonth}
+              onModeChange={setCalendarMode}
+              onEventClick={setSelectedEvent}
+            />
+          ) : (
+            <CalendarView
+              events={filteredEvents || []}
+              currentMonth={calendarMonth}
+              currentWeek={calendarWeek}
+              calendarMode={calendarMode}
+              onMonthChange={setCalendarMonth}
+              onWeekChange={setCalendarWeek}
+              onModeChange={setCalendarMode}
+              onEventClick={setSelectedEvent}
+            />
+          )
         )}
       </div>
 
