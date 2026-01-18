@@ -22,6 +22,7 @@ export interface Event {
   description_short: string | null;
   description_full: string | null;
   teacher: string | null;
+  schedule: string | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;
