@@ -132,29 +132,11 @@ export default function ScheduleWidget() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent widget-container">
+    <div className="bg-transparent widget-container">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        {/* View Toggle */}
-        <div className="flex justify-center mb-6">
-          <ViewToggle value={viewMode} onChange={setViewMode} />
-        </div>
-
-        {/* Filters Row */}
-        <div className="flex flex-col gap-4 mb-8">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Поиск по названию..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Filter controls */}
-          <div className="flex flex-col md:flex-row gap-4">
+        {/* Filters Row - filters left, search right */}
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="flex flex-col md:flex-row gap-4 flex-1">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="justify-between">
@@ -205,6 +187,23 @@ export default function ScheduleWidget() {
               </Select>
             )}
           </div>
+
+          {/* Search - pushed to right */}
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* View Toggle - below filters */}
+        <div className="flex justify-center mb-6">
+          <ViewToggle value={viewMode} onChange={setViewMode} />
         </div>
 
         {/* Content */}

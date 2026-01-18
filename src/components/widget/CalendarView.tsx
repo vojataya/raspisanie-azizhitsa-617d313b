@@ -95,7 +95,7 @@ export function CalendarView({ events, currentMonth, onMonthChange, onEventClick
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 auto-rows-min">
         {days.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayEvents = eventsByDate.get(dateKey) || [];
@@ -105,7 +105,7 @@ export function CalendarView({ events, currentMonth, onMonthChange, onEventClick
           return (
             <div
               key={index}
-              className={`min-h-[120px] border-r border-b last:border-r-0 p-1 ${
+              className={`min-h-[100px] border-r border-b last:border-r-0 p-1 ${
                 !isCurrentMonth ? 'bg-muted/30' : ''
               }`}
             >
@@ -114,7 +114,7 @@ export function CalendarView({ events, currentMonth, onMonthChange, onEventClick
               } ${!isCurrentMonth ? 'text-muted-foreground' : ''}`}>
                 {format(day, 'd')}
               </div>
-              <div className="space-y-0.5 max-h-[calc(120px-32px)] overflow-y-auto">
+              <div className="space-y-0.5">
                 {dayEvents.map(event => (
                   <CalendarEventItem
                     key={event.id}
