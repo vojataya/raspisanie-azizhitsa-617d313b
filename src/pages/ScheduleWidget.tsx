@@ -166,9 +166,21 @@ export default function ScheduleWidget() {
   return (
     <div className="bg-transparent widget-container">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        {/* Filters Row - filters left, search right */}
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <div className="flex flex-col md:flex-row gap-4 flex-1">
+        {/* Filters Row - search + filters left, toggle right */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center">
+          {/* Left side: search and filters */}
+          <div className="flex flex-col md:flex-row gap-3 flex-1 items-start md:items-center flex-wrap">
+            <div className="relative w-full md:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Поиск по названию..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="justify-between">
@@ -194,7 +206,7 @@ export default function ScheduleWidget() {
             </Popover>
 
             <Select value={lessonTypeFilter} onValueChange={setLessonTypeFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Все виды" />
               </SelectTrigger>
               <SelectContent>
@@ -207,7 +219,7 @@ export default function ScheduleWidget() {
 
             {availableModes.length > 0 && (
               <Select value={modeFilter} onValueChange={setModeFilter}>
-                <SelectTrigger className="w-full md:w-[200px]">
+                <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Все режимы" />
                 </SelectTrigger>
                 <SelectContent>
@@ -220,22 +232,10 @@ export default function ScheduleWidget() {
             )}
           </div>
 
-          {/* Search - pushed to right */}
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Поиск по названию..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          {/* Right side: view toggle */}
+          <div className="flex-shrink-0">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
           </div>
-        </div>
-
-        {/* View Toggle - below filters */}
-        <div className="flex justify-center mb-6">
-          <ViewToggle value={viewMode} onChange={setViewMode} />
         </div>
 
         {/* Content */}
