@@ -1,17 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useEvents } from '@/hooks/useEvents';
 import { useLessonTypes } from '@/hooks/useLessonTypes';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { EventWithLessonType } from '@/types/database';
 import { formatMonthShort, formatDay, formatDayOfWeekShort, formatTimeRange, formatFullDate } from '@/lib/dateUtils';
 import { parseISO } from 'date-fns';
-import { MapPin, Clock, X, Calendar, User, ChevronDown } from 'lucide-react';
+import { MapPin, Clock, X, Calendar, User, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { ru } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
+import { ViewToggle, ViewMode } from '@/components/widget/ViewToggle';
+import { CalendarView } from '@/components/widget/CalendarView';
 
 function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
   const date = parseISO(event.start_at);
@@ -54,11 +57,6 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
 
   const lt = event.lesson_type;
 
-  const hexToRgba = (hex: string, opacity: number) => {
-    const r = parseInt(hex.slice(1, 3), 16); const g = parseInt(hex.slice(3, 5), 16); const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -84,8 +82,12 @@ export default function ScheduleWidget() {
   const { data: settings } = useWidgetSettings();
   const { data: lessonTypes } = useLessonTypes();
   const [lessonTypeFilter, setLessonTypeFilter] = useState<string>('all');
+  const [modeFilter, setModeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<EventWithLessonType | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('tile');
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   const { data: events, isLoading } = useEvents({
     publishedOnly: true,
@@ -93,8 +95,35 @@ export default function ScheduleWidget() {
     lessonTypeId: lessonTypeFilter !== 'all' ? lessonTypeFilter : undefined,
     startDate: dateRange?.from,
     endDate: dateRange?.to,
-    limit: settings?.max_events ?? 20,
+    limit: settings?.max_events ?? 200, // Increase limit for calendar view
   });
+
+  // Get unique modes from events
+  const availableModes = useMemo(() => {
+    if (!events) return [];
+    const modes = new Set<string>();
+    events.forEach(event => {
+      if (event.mode) modes.add(event.mode);
+    });
+    return Array.from(modes).sort();
+  }, [events]);
+
+  // Filter events by search query and mode
+  const filteredEvents = useMemo(() => {
+    if (!events) return [];
+    return events.filter(event => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!event.title.toLowerCase().includes(query)) return false;
+      }
+      // Mode filter
+      if (modeFilter !== 'all') {
+        if (event.mode !== modeFilter) return false;
+      }
+      return true;
+    });
+  }, [events, searchQuery, modeFilter]);
 
   const formatDateRangeLabel = () => {
     if (!dateRange?.from) return 'Выберите даты';
@@ -105,39 +134,102 @@ export default function ScheduleWidget() {
   return (
     <div className="min-h-screen bg-transparent widget-container">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="justify-between">
-                <Calendar className="w-4 h-4 mr-2" />
-                {formatDateRangeLabel()}
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarComponent 
-                mode="range" 
-                selected={dateRange} 
-                onSelect={setDateRange} 
-                locale={ru}
-                numberOfMonths={2}
-              />
-              <div className="p-2 border-t">
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => setDateRange(undefined)}>
-                  Сбросить
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Select value={lessonTypeFilter} onValueChange={setLessonTypeFilter}>
-            <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Все виды" /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Все виды</SelectItem>{lessonTypes?.map(lt => <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>)}</SelectContent>
-          </Select>
+        {/* View Toggle */}
+        <div className="flex justify-center mb-6">
+          <ViewToggle value={viewMode} onChange={setViewMode} />
         </div>
 
-        {isLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div> : events && events.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{events.map(event => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} />)}</div>
-        ) : <div className="text-center py-12 text-muted-foreground">Нет событий для отображения</div>}
+        {/* Filters Row */}
+        <div className="flex flex-col gap-4 mb-8">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Filter controls */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-between">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  {formatDateRangeLabel()}
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent 
+                  mode="range" 
+                  selected={dateRange} 
+                  onSelect={setDateRange} 
+                  locale={ru}
+                  numberOfMonths={2}
+                />
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full" onClick={() => setDateRange(undefined)}>
+                    Сбросить
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Select value={lessonTypeFilter} onValueChange={setLessonTypeFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Все виды" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все виды</SelectItem>
+                {lessonTypes?.map(lt => (
+                  <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {availableModes.length > 0 && (
+              <Select value={modeFilter} onValueChange={setModeFilter}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Все режимы" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все режимы</SelectItem>
+                  {availableModes.map(mode => (
+                    <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : viewMode === 'tile' ? (
+          filteredEvents && filteredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredEvents.map(event => (
+                <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">Нет событий для отображения</div>
+          )
+        ) : (
+          <CalendarView
+            events={filteredEvents || []}
+            currentMonth={calendarMonth}
+            onMonthChange={setCalendarMonth}
+            onEventClick={setSelectedEvent}
+          />
+        )}
       </div>
 
       {selectedEvent && <EventPopup event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
