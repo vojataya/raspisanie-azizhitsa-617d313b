@@ -5,7 +5,7 @@ import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { EventWithLessonType } from '@/types/database';
 import { formatMonthShort, formatDay, formatDayOfWeekShort, formatTimeRange, formatFullDate } from '@/lib/dateUtils';
 import { parseISO } from 'date-fns';
-import { MapPin, Clock, X, Calendar, User, ChevronDown, Search, Monitor, Repeat } from 'lucide-react';
+import { MapPin, Clock, X, Calendar, User, ChevronDown, Search, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,12 +36,11 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
         {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)) }} />}
       </div>
       <div className="p-4 flex-1 flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
-        <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}</div>
+        <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}{event.mode && ` • ${event.mode.toUpperCase()}`}</div>
         <h3 className="font-bold text-lg mb-2">{event.title}</h3>
         <div className="space-y-1 text-sm opacity-80 mt-auto">
           {event.schedule && <div className="flex items-center gap-2"><Repeat className="w-4 h-4 flex-shrink-0" /><span>{event.schedule}</span></div>}
           <div className="flex items-center gap-2"><Clock className="w-4 h-4 flex-shrink-0" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
-          {event.mode && <div className="flex items-center gap-2"><Monitor className="w-4 h-4 flex-shrink-0" /><span>{event.mode}</span></div>}
           {event.teacher && <div className="flex items-center gap-2"><User className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.teacher}</span></div>}
           {event.location && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /><span className="truncate">{event.location}</span></div>}
         </div>
@@ -81,7 +80,7 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
           <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white shadow-md transition-colors" style={{ color: '#000' }}><X className="w-5 h-5" /></button>
           {event.image_url && <img src={event.image_url} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
           <div className="p-6 space-y-4">
-            <div><span className="text-xs font-bold px-2 py-1" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}</span></div>
+            <div><span className="text-xs font-bold px-2 py-1" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}{event.mode && ` • ${event.mode.toUpperCase()}`}</span></div>
             <h2 className="text-2xl font-bold">{event.title}</h2>
             {event.description_full && <div className="prose prose-sm max-w-none opacity-80" style={{ color: lt.text_color }} dangerouslySetInnerHTML={{ __html: event.description_full }} />}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-current/20">
@@ -92,7 +91,6 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
                 <div className="flex items-center gap-2 mt-1"><Clock className="w-4 h-4" /><span>{formatTimeRange(event.start_at, event.end_at)}</span></div>
               </div>
               <div className="space-y-2">
-                {event.mode && <div><div className="text-xs font-bold opacity-60 mb-1">ФОРМАТ</div><div className="flex items-center gap-2"><Monitor className="w-4 h-4" /><span>{event.mode}</span></div></div>}
                 {event.location && <div><div className="text-xs font-bold opacity-60 mb-1">ГДЕ</div><div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.location}</span></div></div>}
               </div>
             </div>
