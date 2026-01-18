@@ -15,7 +15,8 @@ import { ru } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { ViewToggle, ViewMode } from '@/components/widget/ViewToggle';
 import { CalendarView } from '@/components/widget/CalendarView';
-
+import { MobileCalendarView } from '@/components/widget/MobileCalendarView';
+import { useIsMobile } from '@/hooks/use-mobile';
 function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
   const date = parseISO(event.start_at);
   const lt = event.lesson_type;
@@ -88,6 +89,8 @@ export default function ScheduleWidget() {
   const [selectedEvent, setSelectedEvent] = useState<EventWithLessonType | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
+  const [calendarWeek, setCalendarWeek] = useState<Date>(new Date());
+  const isMobile = useIsMobile();
 
   // When embedded as an iframe (e.g., on Tilda), notify the parent about our height
   // so the iframe can auto-resize and avoid an internal scrollbar.
@@ -253,6 +256,13 @@ export default function ScheduleWidget() {
           ) : (
             <div className="text-center py-12 text-muted-foreground">Нет событий для отображения</div>
           )
+        ) : isMobile ? (
+          <MobileCalendarView
+            events={filteredEvents || []}
+            currentWeek={calendarWeek}
+            onWeekChange={setCalendarWeek}
+            onEventClick={setSelectedEvent}
+          />
         ) : (
           <CalendarView
             events={filteredEvents || []}

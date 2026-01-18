@@ -74,24 +74,26 @@ export function CalendarView({ events, currentMonth, onMonthChange, onEventClick
 
   return (
     <div className="bg-white shadow-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={() => onMonthChange(subMonths(currentMonth, 1))}>
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-        <h2 className="text-lg font-semibold capitalize">{monthYearLabel}</h2>
-        <Button variant="ghost" size="icon" onClick={() => onMonthChange(addMonths(currentMonth, 1))}>
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-      </div>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white border-b">
+        <div className="flex items-center justify-between p-4">
+          <Button variant="ghost" size="icon" onClick={() => onMonthChange(subMonths(currentMonth, 1))}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <h2 className="text-lg font-semibold capitalize">{monthYearLabel}</h2>
+          <Button variant="ghost" size="icon" onClick={() => onMonthChange(addMonths(currentMonth, 1))}>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
 
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b">
-        {weekDays.map(day => (
-          <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground border-r last:border-r-0">
-            {day}
-          </div>
-        ))}
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 border-t">
+          {weekDays.map(day => (
+            <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground border-r last:border-r-0">
+              {day}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Calendar grid */}
