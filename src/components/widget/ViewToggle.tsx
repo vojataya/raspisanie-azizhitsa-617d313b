@@ -14,7 +14,7 @@ export function ViewToggle({ value, onChange }: ViewToggleProps) {
       type="single"
       value={value}
       onValueChange={(v) => v && onChange(v as ViewMode)}
-      className="border"
+      className="border rounded-md"
     >
       <ToggleGroupItem value="tile" aria-label="Режим плитки" className="gap-2">
         <LayoutGrid className="w-4 h-4" />

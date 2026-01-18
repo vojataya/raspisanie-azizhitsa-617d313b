@@ -184,7 +184,7 @@ export function CalendarView({
   };
 
   return (
-    <div className="bg-white shadow-lg">
+    <div className="bg-white shadow-lg min-h-0">
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-white border-b">
         <div className="flex items-center justify-between p-4">
