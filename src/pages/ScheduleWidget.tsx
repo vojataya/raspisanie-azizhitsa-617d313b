@@ -89,6 +89,38 @@ export default function ScheduleWidget() {
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
+  // When embedded as an iframe (e.g., on Tilda), notify the parent about our height
+  // so the iframe can auto-resize and avoid an internal scrollbar.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.parent === window) return; // not in iframe
+
+    const postHeight = () => {
+      const height = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        document.documentElement.offsetHeight,
+        document.body.offsetHeight
+      );
+      window.parent.postMessage(
+        { type: 'schedule-widget:resize', height },
+        '*'
+      );
+    };
+
+    postHeight();
+
+    const ro = new ResizeObserver(() => postHeight());
+    ro.observe(document.documentElement);
+
+    window.addEventListener('load', postHeight);
+
+    return () => {
+      window.removeEventListener('load', postHeight);
+      ro.disconnect();
+    };
+  }, []);
+
   const { data: events, isLoading } = useEvents({
     publishedOnly: true,
     showPast: settings?.show_past_events ?? false,

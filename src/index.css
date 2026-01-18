@@ -98,9 +98,18 @@ All colors MUST be HSL.
   background: transparent !important;
 }
 
-/* Override body background when widget is embedded */
+/* Override page sizing/background when widget is embedded */
+html:has(.widget-container),
 body:has(.widget-container) {
   background: transparent !important;
+  overflow: visible !important;
+}
+
+body:has(.widget-container) #root {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: initial !important;
 }
 
 /* Custom scrollbar for admin */
