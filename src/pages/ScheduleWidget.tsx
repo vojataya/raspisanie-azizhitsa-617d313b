@@ -54,6 +54,14 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleEsc);
     document.body.style.overflow = 'hidden';
+
+    // In embedded mode (iframe), `position: fixed` is relative to the iframe viewport.
+    // If the parent page is scrolled so the iframe top isn't visible, we ask the parent
+    // to scroll the iframe into view so the modal is immediately visible.
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'schedule-widget:reveal-modal' }, '*');
+    }
+
     return () => { document.removeEventListener('keydown', handleEsc); document.body.style.overflow = ''; };
   }, [onClose]);
 
