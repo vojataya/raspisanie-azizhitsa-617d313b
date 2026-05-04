@@ -48,9 +48,9 @@ const App = () => (
             <Route path="/admin/lesson-types/new" element={<ProtectedRoute><LessonTypeForm /></ProtectedRoute>} />
             <Route path="/admin/lesson-types/:id" element={<ProtectedRoute><LessonTypeForm /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><WidgetSettings /></ProtectedRoute>} />
-            <Route path="/admin/invites" element={<ProtectedRoute><InvitesList /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute><UsersList /></ProtectedRoute>} />
-            
+            <Route path="/admin/invites" element={<ProtectedRoute><AdminRoute><InvitesList /></AdminRoute></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><AdminRoute><UsersList /></AdminRoute></ProtectedRoute>} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
