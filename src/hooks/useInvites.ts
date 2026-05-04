@@ -31,15 +31,13 @@ export function useCheckInvite(email: string) {
   return useQuery({
     queryKey: ['invite-check', email],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('invites')
-        .select('*')
-        .eq('email', email.toLowerCase().trim())
-        .is('used_at', null)
-        .maybeSingle();
-      
+      const { data, error } = await supabase.rpc('check_invite_for_email', {
+        check_email: email.toLowerCase().trim(),
+      });
+
       if (error) throw error;
-      return data as Invite | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ? { role: row.role as 'admin' | 'editor' } : null;
     },
     enabled: !!email && email.includes('@'),
   });

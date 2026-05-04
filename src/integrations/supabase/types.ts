@@ -216,6 +216,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_invite_for_email: {
+        Args: { check_email: string }
+        Returns: {
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       has_any_role: { Args: never; Returns: boolean }
       has_role: {
         Args: {
