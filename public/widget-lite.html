@@ -175,31 +175,49 @@
     return pad2(ds.getHours()) + ":" + pad2(ds.getMinutes()) + " – " + pad2(de.getHours()) + ":" + pad2(de.getMinutes());
   }
 
-  // ---------- Image optimization ----------
-  // Convert a Supabase Storage public-object URL into a Storage image-render
-  // URL that asks for a width-constrained, high-quality re-encode. We do NOT
-  // pass resize=cover because that requires a verified height and was producing
-  // square-cropped, mushy thumbnails. Without resize=, the renderer scales the
-  // longest side down while preserving aspect ratio. If transformation isn't
-  // enabled on the Supabase project, the <img> onerror handler swaps to the
-  // original URL.
-  //
-  // Source path:  /storage/v1/object/public/<bucket>/<key>
-  // Target path:  /storage/v1/render/image/public/<bucket>/<key>?width=&quality=
-  function optimizeImageUrl(url, width, quality) {
-    if (!url || typeof url !== "string") return url;
-    var marker = "/storage/v1/object/public/";
-    var idx = url.indexOf(marker);
-    if (idx === -1) return url;
-    var base = url.slice(0, idx);
-    var tail = url.slice(idx + marker.length);
-    // Strip any existing query string from the source URL before re-encoding.
+  // ---------- Image proxying ----------
+  // Browsers on networks that block supabase.co (e.g. some Russian ISPs
+  // without VPN) cannot load images directly from Storage, so every <img>
+  // src goes through a same-origin Netlify function that fetches the bytes
+  // server-side. The function only allows the public event-images bucket.
+  var IMAGE_PROXY_URL = "/.netlify/functions/image-proxy";
+  var EVENT_IMAGES_OBJECT_PREFIX = "/storage/v1/object/public/event-images/";
+  var EVENT_IMAGES_RENDER_PREFIX = "/storage/v1/render/image/public/event-images/";
+
+  // Extract just the storage key (e.g. "abc/cover.jpg") from a public Supabase
+  // URL. Returns null for unknown/invalid URLs so we can fall back gracefully.
+  function extractStorageKey(url) {
+    if (!url || typeof url !== "string") return null;
+    var idx = url.indexOf(EVENT_IMAGES_OBJECT_PREFIX);
+    var prefixLen = EVENT_IMAGES_OBJECT_PREFIX.length;
+    if (idx === -1) {
+      idx = url.indexOf(EVENT_IMAGES_RENDER_PREFIX);
+      prefixLen = EVENT_IMAGES_RENDER_PREFIX.length;
+    }
+    if (idx === -1) return null;
+    var tail = url.slice(idx + prefixLen);
     var qIdx = tail.indexOf("?");
     if (qIdx !== -1) tail = tail.slice(0, qIdx);
+    return tail || null;
+  }
+
+  // Build a same-origin proxy URL. Width/quality hint the server-side render
+  // pass; if rendering is disabled or fails, the function falls back to the
+  // original object bytes. Passing only the storage key keeps query strings
+  // short.
+  function proxiedImageUrl(url, width, quality) {
+    if (!url || typeof url !== "string") return url;
+    var key = extractStorageKey(url);
     var params = [];
-    if (width) params.push("width=" + encodeURIComponent(width));
-    if (quality) params.push("quality=" + encodeURIComponent(quality));
-    return base + "/storage/v1/render/image/public/" + tail + (params.length ? "?" + params.join("&") : "");
+    if (key) {
+      params.push("path=" + encodeURIComponent(key));
+    } else {
+      // Unknown shape — pass through and let the server validate/reject.
+      params.push("url=" + encodeURIComponent(url));
+    }
+    if (width) params.push("w=" + encodeURIComponent(width));
+    if (quality) params.push("q=" + encodeURIComponent(quality));
+    return IMAGE_PROXY_URL + "?" + params.join("&");
   }
 
   // ---------- Iframe resize ----------
@@ -355,18 +373,20 @@
     var date = new Date(e.start_at);
     var bg = hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity));
     var dateBoxBg = lt.date_box_color || "#666";
-    // Card thumbnail: ~900px wide @ q82 keeps DPR>1 displays sharp while still
-    // smaller than originals. No forced crop — the browser fits via object-fit.
-    // First six cards load eagerly so iframe/lazy-loading quirks don't hide
-    // above-the-fold images; only the very first gets fetchpriority=high.
+    // Card thumbnail: ~900px wide @ q82 via same-origin image proxy. The
+    // proxy server-side falls back to the un-rendered object if rendering
+    // isn't available. As a last-resort, the <img> onerror swaps to a
+    // proxy request for the raw object (no width/quality), which still
+    // avoids direct supabase.co browser calls. First six cards load
+    // eagerly; only the very first gets fetchpriority=high.
     var img;
     if (e.image_url) {
-      var thumb = optimizeImageUrl(e.image_url, 900, 82);
-      var orig = escHTML(e.image_url);
+      var thumb = proxiedImageUrl(e.image_url, 900, 82);
+      var thumbRaw = proxiedImageUrl(e.image_url);
       var loading = idx < 6 ? "eager" : "lazy";
       var fetchpriority = idx === 0 ? ' fetchpriority="high"' : '';
       img = '<img src="' + escHTML(thumb) + '"' +
-            ' data-fallback="' + orig + '"' +
+            ' data-fallback="' + escHTML(thumbRaw) + '"' +
             ' alt="' + escHTML(e.title) + '"' +
             ' loading="' + loading + '" decoding="async"' + fetchpriority +
             ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute(\'data-fallback\');}">';
@@ -418,14 +438,15 @@
     inner.style.color = lt.text_color || "#1a1a1a";
     inner.addEventListener("click", function (ev) { ev.stopPropagation(); });
 
-    // Modal hero: 1600w @ q88 keeps detail on retina/desktop. Fallback to
-    // the original on transform failure.
+    // Modal hero: 1600w @ q88 via the same-origin image proxy. Falls back
+    // to a raw (un-rendered) proxy fetch — never a direct supabase.co URL —
+    // so blocked networks always stay on the same origin.
     var hero = "";
     if (e.image_url) {
-      var heroOpt = optimizeImageUrl(e.image_url, 1600, 88);
-      var heroOrig = escHTML(e.image_url);
+      var heroOpt = proxiedImageUrl(e.image_url, 1600, 88);
+      var heroRaw = proxiedImageUrl(e.image_url);
       hero = '<img class="hero" src="' + escHTML(heroOpt) + '"' +
-             ' data-fallback="' + heroOrig + '"' +
+             ' data-fallback="' + escHTML(heroRaw) + '"' +
              ' alt="' + escHTML(e.title) + '"' +
              ' loading="eager" decoding="async"' +
              ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute(\'data-fallback\');}">';
