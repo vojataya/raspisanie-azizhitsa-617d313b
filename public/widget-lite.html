@@ -43,6 +43,7 @@
   .card .imgwrap { position: relative; }
   .card .imgwrap img {
     display: block; width: 100%; height: 176px; object-fit: cover;
+    background: #f4f4f5;
   }
   .card .imgwrap .ph { width: 100%; height: 176px; }
   .date-box {
@@ -172,6 +173,32 @@
   function fmtTimeRange(s, e) {
     var ds = new Date(s), de = new Date(e);
     return pad2(ds.getHours()) + ":" + pad2(ds.getMinutes()) + " – " + pad2(de.getHours()) + ":" + pad2(de.getMinutes());
+  }
+
+  // ---------- Image optimization ----------
+  // Convert a Supabase Storage public-object URL into a Storage image-render
+  // URL with width/quality/resize so the browser downloads a thumbnail
+  // instead of the original multi-MB file. If the URL isn't a Supabase
+  // public-object URL (or transformation fails at runtime), the <img>
+  // onerror handler falls back to the original URL.
+  //
+  // Source path:  /storage/v1/object/public/<bucket>/<key>
+  // Target path:  /storage/v1/render/image/public/<bucket>/<key>?width=&quality=&resize=cover
+  function optimizeImageUrl(url, width, quality) {
+    if (!url || typeof url !== "string") return url;
+    var marker = "/storage/v1/object/public/";
+    var idx = url.indexOf(marker);
+    if (idx === -1) return url;
+    var base = url.slice(0, idx);
+    var tail = url.slice(idx + marker.length);
+    // Strip any existing query string from the source URL before re-encoding.
+    var qIdx = tail.indexOf("?");
+    if (qIdx !== -1) tail = tail.slice(0, qIdx);
+    var params = [];
+    if (width) params.push("width=" + encodeURIComponent(width));
+    if (quality) params.push("quality=" + encodeURIComponent(quality));
+    params.push("resize=cover");
+    return base + "/storage/v1/render/image/public/" + tail + "?" + params.join("&");
   }
 
   // ---------- Iframe resize ----------
@@ -327,9 +354,23 @@
     var date = new Date(e.start_at);
     var bg = hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity));
     var dateBoxBg = lt.date_box_color || "#666";
-    var img = e.image_url
-      ? '<img src="' + escHTML(e.image_url) + '" alt="' + escHTML(e.title) + '" loading="lazy">'
-      : '<div class="ph" style="background:' + bg + '"></div>';
+    // Card thumbnail: ~480px wide @ q65 covers DPR>1 displays without huge payloads.
+    // First two cards load eagerly to keep above-the-fold LCP fast; rest lazy.
+    var img;
+    if (e.image_url) {
+      var thumb = optimizeImageUrl(e.image_url, 480, 65);
+      var orig = escHTML(e.image_url);
+      var loading = idx < 2 ? "eager" : "lazy";
+      var fetchpriority = idx === 0 ? ' fetchpriority="high"' : '';
+      img = '<img src="' + escHTML(thumb) + '"' +
+            ' data-fallback="' + orig + '"' +
+            ' alt="' + escHTML(e.title) + '"' +
+            ' width="480" height="320"' +
+            ' loading="' + loading + '" decoding="async"' + fetchpriority +
+            ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}">';
+    } else {
+      img = '<div class="ph" style="background:' + bg + '"></div>';
+    }
 
     var rows = "";
     if (e.schedule) rows += '<div class="row">' + iconRepeat() + "<span>" + escHTML(e.schedule) + "</span></div>";
@@ -375,7 +416,17 @@
     inner.style.color = lt.text_color || "#1a1a1a";
     inner.addEventListener("click", function (ev) { ev.stopPropagation(); });
 
-    var hero = e.image_url ? '<img class="hero" src="' + escHTML(e.image_url) + '" alt="' + escHTML(e.title) + '">' : "";
+    // Modal hero: larger (1200w) transform with lazy fallback to the original.
+    var hero = "";
+    if (e.image_url) {
+      var heroOpt = optimizeImageUrl(e.image_url, 1200, 75);
+      var heroOrig = escHTML(e.image_url);
+      hero = '<img class="hero" src="' + escHTML(heroOpt) + '"' +
+             ' data-fallback="' + heroOrig + '"' +
+             ' alt="' + escHTML(e.title) + '"' +
+             ' loading="eager" decoding="async"' +
+             ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}">';
+    }
     var kicker = (lt.name || "").toUpperCase();
     if (e.mode) kicker += " • " + String(e.mode).toUpperCase();
 
