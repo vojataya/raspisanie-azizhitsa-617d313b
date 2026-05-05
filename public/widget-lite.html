@@ -40,12 +40,12 @@
     background: #fff;
   }
   .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
-  .card .imgwrap { position: relative; }
+  .card .imgwrap { position: relative; background: #fafafa; }
   .card .imgwrap img {
-    display: block; width: 100%; height: 176px; object-fit: cover;
-    background: #f4f4f5;
+    display: block; width: 100%; height: 240px; object-fit: contain;
+    background: #fafafa;
   }
-  .card .imgwrap .ph { width: 100%; height: 176px; }
+  .card .imgwrap .ph { width: 100%; height: 240px; }
   .date-box {
     position: absolute; top: 12px; left: 12px; z-index: 2;
     padding: 6px 10px; text-align: center; color: #fff;
@@ -80,7 +80,7 @@
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     pointer-events: auto;
   }
-  .modal img.hero { display: block; width: 100%; max-height: 384px; object-fit: contain; background: #f4f4f5; }
+  .modal img.hero { display: block; width: 100%; max-height: 480px; object-fit: contain; background: #fafafa; }
   .modal .pad { padding: 22px; }
   .modal .badge {
     display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px;
@@ -373,23 +373,22 @@
     var date = new Date(e.start_at);
     var bg = hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity));
     var dateBoxBg = lt.date_box_color || "#666";
-    // Card thumbnail: ~900px wide @ q82 via same-origin image proxy. The
-    // proxy server-side falls back to the un-rendered object if rendering
-    // isn't available. As a last-resort, the <img> onerror swaps to a
-    // proxy request for the raw object (no width/quality), which still
-    // avoids direct supabase.co browser calls. First six cards load
-    // eagerly; only the very first gets fetchpriority=high.
+    // Card thumbnail: serve the RAW original via the same-origin image
+    // proxy (no width/quality transforms). Supabase render transforms have
+    // been producing degraded/grey output for tall portrait sources, and
+    // CSS object-fit: contain preserves the full image, so visual fidelity
+    // beats bandwidth here. Fallback is the same raw proxy URL — never a
+    // direct supabase.co URL — so blocked networks always stay on the same
+    // origin. First six cards load eagerly; only the very first gets
+    // fetchpriority=high.
     var img;
     if (e.image_url) {
-      var thumb = proxiedImageUrl(e.image_url, 900, 82);
-      var thumbRaw = proxiedImageUrl(e.image_url);
+      var thumb = proxiedImageUrl(e.image_url);
       var loading = idx < 6 ? "eager" : "lazy";
       var fetchpriority = idx === 0 ? ' fetchpriority="high"' : '';
       img = '<img src="' + escHTML(thumb) + '"' +
-            ' data-fallback="' + escHTML(thumbRaw) + '"' +
             ' alt="' + escHTML(e.title) + '"' +
-            ' loading="' + loading + '" decoding="async"' + fetchpriority +
-            ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute(\'data-fallback\');}">';
+            ' loading="' + loading + '" decoding="async"' + fetchpriority + '>';
     } else {
       img = '<div class="ph" style="background:' + bg + '"></div>';
     }
@@ -438,18 +437,17 @@
     inner.style.color = lt.text_color || "#1a1a1a";
     inner.addEventListener("click", function (ev) { ev.stopPropagation(); });
 
-    // Modal hero: 1600w @ q88 via the same-origin image proxy. Falls back
-    // to a raw (un-rendered) proxy fetch — never a direct supabase.co URL —
-    // so blocked networks always stay on the same origin.
+    // Modal hero: serve the RAW original via the same-origin image proxy
+    // (no width/quality transforms). Combined with object-fit: contain
+    // this preserves aspect ratio for tall portrait sources without
+    // cropping into grey margins. Same-origin only — never a direct
+    // supabase.co URL — so blocked networks stay reachable.
     var hero = "";
     if (e.image_url) {
-      var heroOpt = proxiedImageUrl(e.image_url, 1600, 88);
-      var heroRaw = proxiedImageUrl(e.image_url);
-      hero = '<img class="hero" src="' + escHTML(heroOpt) + '"' +
-             ' data-fallback="' + escHTML(heroRaw) + '"' +
+      var heroSrc = proxiedImageUrl(e.image_url);
+      hero = '<img class="hero" src="' + escHTML(heroSrc) + '"' +
              ' alt="' + escHTML(e.title) + '"' +
-             ' loading="eager" decoding="async"' +
-             ' onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute(\'data-fallback\');}">';
+             ' loading="eager" decoding="async">';
     }
     var kicker = (lt.name || "").toUpperCase();
     if (e.mode) kicker += " • " + String(e.mode).toUpperCase();
