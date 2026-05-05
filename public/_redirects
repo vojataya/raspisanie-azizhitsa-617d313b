@@ -1,1 +1,9 @@
-/*    /index.html   200
+# Public schedule widget — serve the static, no-React, no-SDK page.
+# Order matters: these specific rules must come BEFORE the SPA catch-all,
+# otherwise Netlify rewrites to /index.html (SPA) and React handles the route.
+/embed         /widget-lite.html   200
+/widget        /widget-lite.html   200
+/widget-lite   /widget-lite.html   200
+
+# SPA fallback for the React app (admin, /widget-react, etc.)
+/*             /index.html         200

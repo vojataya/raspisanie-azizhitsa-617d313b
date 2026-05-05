@@ -56,9 +56,19 @@ const App = () => (
         <BrowserRouter>
           <AuthGate>
             <Routes>
+              {/* Root + /widget are served as static widget-lite.html via Netlify _redirects.
+                  These React routes only fire in the dev server or if Netlify _redirects fails. */}
               <Route path="/" element={<Navigate to="/widget" replace />} />
               <Route
                 path="/widget"
+                element={
+                  <ErrorBoundary>
+                    <ScheduleWidget />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/widget-react"
                 element={
                   <ErrorBoundary>
                     <ScheduleWidget />
