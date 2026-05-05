@@ -36,9 +36,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/admin" replace />} />
+            <Route path="/" element={<Navigate to="/widget" replace />} />
             <Route path="/auth" element={<AuthRedirect />} />
-            <Route path="/schedule-widget" element={<ScheduleWidget />} />
+            <Route path="/widget" element={<ScheduleWidget />} />
+            <Route path="/schedule-widget" element={<Navigate to="/widget" replace />} />
             
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/events" element={<ProtectedRoute><EventsList /></ProtectedRoute>} />
