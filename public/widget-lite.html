@@ -46,6 +46,16 @@
     background: #fafafa;
   }
   .card .imgwrap .ph { width: 100%; height: 240px; }
+  .card .imgwrap .ph-unavailable {
+    width: 100%; height: 240px; background: #fafafa; color: #888;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; text-align: center; padding: 12px;
+  }
+  .modal .hero-unavailable {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 240px; background: #fafafa; color: #888;
+    font-size: 14px; text-align: center; padding: 16px;
+  }
   .date-box {
     position: absolute; top: 12px; left: 12px; z-index: 2;
     padding: 6px 10px; text-align: center; color: #fff;
@@ -362,7 +372,27 @@
         cards[idx].addEventListener("click", function () { openModal(events[idx]); });
       })(j);
     }
+    bindImageFallback(contentEl.querySelectorAll(".card-img"), "ph-unavailable");
     postHeight();
+  }
+
+  // If the proxied image fails to load (e.g. proxy 502 on a huge raw
+  // original), replace the <img> with a neutral placeholder so users
+  // don't see the broken image icon. Never falls back to the raw
+  // supabase.co URL — that could 502 endlessly on the same byte
+  // budget — and never retries the proxy with the raw object.
+  function bindImageFallback(imgs, placeholderClass) {
+    for (var i = 0; i < imgs.length; i++) {
+      (function (img) {
+        img.addEventListener("error", function handle() {
+          img.removeEventListener("error", handle);
+          var ph = document.createElement("div");
+          ph.className = placeholderClass;
+          ph.textContent = "Изображение недоступно";
+          if (img.parentNode) img.parentNode.replaceChild(ph, img);
+        });
+      })(imgs[i]);
+    }
   }
 
   function renderCard(e, idx) {
@@ -373,20 +403,22 @@
     var date = new Date(e.start_at);
     var bg = hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity));
     var dateBoxBg = lt.date_box_color || "#666";
-    // Card thumbnail: serve the RAW original via the same-origin image
-    // proxy (no width/quality transforms). Supabase render transforms have
-    // been producing degraded/grey output for tall portrait sources, and
-    // CSS object-fit: contain preserves the full image, so visual fidelity
-    // beats bandwidth here. Fallback is the same raw proxy URL — never a
-    // direct supabase.co URL — so blocked networks always stay on the same
-    // origin. First six cards load eagerly; only the very first gets
-    // fetchpriority=high.
+    // Card thumbnail: served via same-origin image proxy with transform
+    // params (width=1000, quality=85). Supabase render preserves aspect
+    // ratio by default (no resize=cover), so combined with CSS
+    // object-fit: contain the full image stays visible without grey
+    // crop margins. Transforms also keep payloads under Netlify
+    // function size limits (raw originals can exceed 6MB → 502).
+    // Same-origin proxy only — never a direct supabase.co URL — so
+    // blocked networks stay reachable. An onerror handler is attached
+    // after render (see bindImageFallbacks) to swap in a neutral
+    // placeholder so users never see a broken image icon.
     var img;
     if (e.image_url) {
-      var thumb = proxiedImageUrl(e.image_url);
+      var thumb = proxiedImageUrl(e.image_url, 1000, 85);
       var loading = idx < 6 ? "eager" : "lazy";
       var fetchpriority = idx === 0 ? ' fetchpriority="high"' : '';
-      img = '<img src="' + escHTML(thumb) + '"' +
+      img = '<img class="card-img" src="' + escHTML(thumb) + '"' +
             ' alt="' + escHTML(e.title) + '"' +
             ' loading="' + loading + '" decoding="async"' + fetchpriority + '>';
     } else {
@@ -437,14 +469,15 @@
     inner.style.color = lt.text_color || "#1a1a1a";
     inner.addEventListener("click", function (ev) { ev.stopPropagation(); });
 
-    // Modal hero: serve the RAW original via the same-origin image proxy
-    // (no width/quality transforms). Combined with object-fit: contain
-    // this preserves aspect ratio for tall portrait sources without
-    // cropping into grey margins. Same-origin only — never a direct
-    // supabase.co URL — so blocked networks stay reachable.
+    // Modal hero: served via same-origin image proxy with larger transform
+    // params (width=1600, quality=88). Supabase render preserves aspect
+    // ratio by default, so object-fit: contain keeps the full image
+    // visible without crop. Transforms keep payloads under Netlify
+    // function size limits (raw originals can exceed 6MB → 502).
+    // Same-origin only — never a direct supabase.co URL.
     var hero = "";
     if (e.image_url) {
-      var heroSrc = proxiedImageUrl(e.image_url);
+      var heroSrc = proxiedImageUrl(e.image_url, 1600, 88);
       hero = '<img class="hero" src="' + escHTML(heroSrc) + '"' +
              ' alt="' + escHTML(e.title) + '"' +
              ' loading="eager" decoding="async">';
@@ -494,6 +527,7 @@
     openOverlay = overlay; openShell = shell;
 
     inner.querySelector(".closebtn").addEventListener("click", closeModal);
+    bindImageFallback(inner.querySelectorAll("img.hero"), "hero-unavailable");
 
     escHandler = function (ev) { if (ev.key === "Escape") closeModal(); };
     document.addEventListener("keydown", escHandler);
