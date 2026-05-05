@@ -123,13 +123,10 @@
 (function () {
   "use strict";
 
-  // Public anon credentials (also baked into the React build via VITE_*).
-  // Safe to expose in a public widget — this is what the JS bundle already ships.
-  var SUPABASE_URL = "https://gupcgjwnattzhcsqecku.supabase.co";
-  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cGNnanduYXR0emhjc3FlY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1Nzk5NTIsImV4cCI6MjA4NDE1NTk1Mn0.7b3vnPPEGaJADA9WEpRQUIPXEkGQFtvsujjfYK_ejSQ";
-
-  var REST = SUPABASE_URL + "/rest/v1";
-  var HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY };
+  // Same-origin Netlify function that proxies the public Supabase reads.
+  // This avoids browsers calling supabase.co directly (blocked on some
+  // networks, e.g. Russia without VPN).
+  var FUNCTION_URL = "/.netlify/functions/public-schedule";
 
   var contentEl = document.getElementById("content");
   var toolbarEl = document.getElementById("toolbar");
@@ -207,10 +204,17 @@
   }
 
   // ---------- Fetch with timeout + helpful errors ----------
-  function fetchJSON(url, label) {
+  function fetchJSON(url, label, opts) {
+    opts = opts || {};
     var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 15000);
-    return fetch(url, { headers: HEADERS, signal: ctrl ? ctrl.signal : undefined, credentials: "omit", mode: "cors" })
+    var timeoutMs = opts.timeoutMs || 15000;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeoutMs);
+    return fetch(url, {
+        headers: opts.headers || { Accept: "application/json" },
+        signal: ctrl ? ctrl.signal : undefined,
+        credentials: "omit",
+        mode: opts.mode || "same-origin"
+      })
       .then(function (res) {
         clearTimeout(timer);
         if (!res.ok) {
@@ -223,46 +227,29 @@
       })
       .catch(function (err) {
         clearTimeout(timer);
-        if (err && err.name === "AbortError") throw new Error(label + ": превышено время ожидания (15с)");
+        if (err && err.name === "AbortError") {
+          throw new Error(label + ": превышено время ожидания (" + Math.round(timeoutMs / 1000) + "с)");
+        }
         throw err;
       });
   }
 
-  // ---------- Data load ----------
+  // ---------- Data load (via same-origin Netlify function) ----------
   function loadAll() {
-    var settingsURL = REST + "/widget_settings?select=show_past_events,max_events&limit=1";
-    var ltURL = REST + "/lesson_types?select=id,name,card_bg_color,card_bg_opacity,date_box_color,text_color";
-    return Promise.all([fetchJSON(settingsURL, "Настройки"), fetchJSON(ltURL, "Виды занятий")])
-      .then(function (res) {
-        state.settings = (res[0] && res[0][0]) || { show_past_events: false, max_events: 200 };
-        state.lessonTypes = res[1] || [];
+    return fetchJSON(FUNCTION_URL, "Расписание", { timeoutMs: 20000 })
+      .then(function (payload) {
+        if (!payload || typeof payload !== "object") {
+          throw new Error("Расписание: некорректный ответ сервера");
+        }
+        if (payload.error) {
+          throw new Error("Расписание: " + payload.error);
+        }
+        state.settings = payload.settings || { show_past_events: false, max_events: 200 };
+        state.lessonTypes = Array.isArray(payload.lesson_types) ? payload.lesson_types : [];
         state.lessonTypesById = {};
         state.lessonTypes.forEach(function (lt) { state.lessonTypesById[lt.id] = lt; });
-      })
-      .then(loadEvents);
-  }
-
-  function loadEvents() {
-    var settings = state.settings || {};
-    var maxEvents = Math.min(Math.max(parseInt(settings.max_events, 10) || 200, 1), 500);
-    var fields = [
-      "id","title","image_url","lesson_type_id","mode","location",
-      "start_at","end_at","description_short","description_full",
-      "teacher","schedule","is_published"
-    ].join(",");
-
-    var url = REST + "/events?select=" + encodeURIComponent(fields)
-      + "&is_published=eq.true"
-      + "&order=start_at.asc"
-      + "&limit=" + maxEvents;
-
-    if (!settings.show_past_events) {
-      url += "&start_at=gte." + encodeURIComponent(new Date().toISOString());
-    }
-
-    return fetchJSON(url, "События").then(function (rows) {
-      state.events = rows || [];
-    });
+        state.events = Array.isArray(payload.events) ? payload.events : [];
+      });
   }
 
   // ---------- Rendering ----------
