@@ -11,10 +11,10 @@ export function useWidgetSettings() {
         .from('widget_settings')
         .select('*')
         .limit(1)
-        .single();
-      
+        .maybeSingle();
+
       if (error) throw error;
-      return data as WidgetSettings;
+      return (data ?? null) as WidgetSettings | null;
     },
   });
 }

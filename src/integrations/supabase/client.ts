@@ -5,13 +5,49 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// localStorage may be unavailable or throw in third-party iframe contexts (Tilda, Safari ITP).
+// Fall back to an in-memory store so the SDK never throws on storage access.
+const memoryStore: Record<string, string> = {};
+const safeStorage = (() => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const testKey = '__sb_test__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    }
+  } catch {
+    // fall through to memory
+  }
+  return {
+    getItem: (k: string) => (k in memoryStore ? memoryStore[k] : null),
+    setItem: (k: string, v: string) => { memoryStore[k] = v; },
+    removeItem: (k: string) => { delete memoryStore[k]; },
+  } as Storage;
+})();
+
+// Detect whether we're loaded in the public widget context. The widget is
+// rendered both at /widget and inside iframes (Tilda). It must NOT persist any
+// auth session — otherwise a stray cookie/localStorage entry from /admin could
+// trigger token refresh attempts that hang or throw and blank the iframe.
+const isWidgetContext = (() => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const path = window.location.pathname || '';
+    if (path.startsWith('/widget') || path.startsWith('/schedule-widget')) return true;
+    // Embedded as iframe -> treat as public widget regardless of path.
+    if (window.parent && window.parent !== window) return true;
+  } catch {
+    return true;
+  }
+  return false;
+})();
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
+    storage: safeStorage,
+    persistSession: !isWidgetContext,
+    autoRefreshToken: !isWidgetContext,
+    detectSessionInUrl: !isWidgetContext,
+  },
 });
