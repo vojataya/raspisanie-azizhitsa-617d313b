@@ -19,43 +19,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        if (cancelled) return;
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession()
-      .then(({ data: { session: existing } }) => {
-        if (cancelled) return;
-        setSession(existing);
-        setUser(existing?.user ?? null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        // Storage / network failures must not leave the app stuck on a spinner.
-        console.warn('[auth] getSession failed:', err);
-        if (cancelled) return;
-        setLoading(false);
-      });
-
-    // Hard timeout: if Supabase auth somehow never resolves (e.g. third-party
-    // storage lock), unblock the UI so the login form is reachable.
-    const timeoutId = window.setTimeout(() => {
-      if (cancelled) return;
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
-    }, 5000);
+    });
 
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {

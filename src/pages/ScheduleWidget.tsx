@@ -185,7 +185,7 @@ export default function ScheduleWidget() {
     };
   }, []);
 
-  const { data: events, isLoading, isError, error } = useEvents({
+  const { data: events, isLoading } = useEvents({
     publishedOnly: true,
     showPast: settings?.show_past_events ?? false,
     lessonTypeId: lessonTypeFilter !== 'all' ? lessonTypeFilter : undefined,
@@ -193,16 +193,6 @@ export default function ScheduleWidget() {
     endDate: dateRange?.to,
     limit: settings?.max_events ?? 200, // Increase limit for calendar view
   });
-
-  // Surface a visible message if the initial events load hangs (e.g. network
-  // blocked in iframe, RLS issue, Supabase outage). Without this, an iframe on
-  // Tilda would stay on the spinner forever with no feedback.
-  const [timedOut, setTimedOut] = useState(false);
-  useEffect(() => {
-    if (!isLoading) return;
-    const t = window.setTimeout(() => setTimedOut(true), 12_000);
-    return () => window.clearTimeout(t);
-  }, [isLoading]);
 
   // Get unique modes from events
   const availableModes = useMemo(() => {
@@ -313,32 +303,13 @@ export default function ScheduleWidget() {
         </div>
 
         {/* Content */}
-        {isLoading && !timedOut && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <div className="text-sm text-muted-foreground">Загрузка расписания…</div>
           </div>
         )}
-
-        {isLoading && timedOut && (
-          <div className="text-center py-12 text-muted-foreground">
-            <div className="font-medium mb-1">Загрузка занимает больше времени, чем обычно.</div>
-            <div className="text-sm">Проверьте соединение с интернетом и обновите страницу.</div>
-          </div>
-        )}
-
-        {isError && (
-          <div className="text-center py-12 text-muted-foreground">
-            <div className="font-medium mb-1">Не удалось загрузить расписание.</div>
-            <div className="text-sm">
-              {(error as Error | null)?.message
-                ? `Ошибка: ${(error as Error).message}`
-                : 'Попробуйте обновить страницу позже.'}
-            </div>
-          </div>
-        )}
-
-        {!isLoading && !isError && viewMode === 'tile' && (
+        
+        {!isLoading && viewMode === 'tile' && (
           filteredEvents && filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredEvents.map(event => (
@@ -350,7 +321,7 @@ export default function ScheduleWidget() {
           )
         )}
         
-        {!isLoading && !isError && viewMode === 'calendar' && (
+        {!isLoading && viewMode === 'calendar' && (
           isMobile ? (
             <MobileCalendarView
               events={filteredEvents || []}

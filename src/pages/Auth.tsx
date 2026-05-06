@@ -45,8 +45,6 @@ export default function AuthPage() {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Неверный email или пароль');
-          } else if (/failed to fetch|networkerror|load failed/i.test(error.message)) {
-            toast.error('Не удалось связаться с сервером. Проверьте подключение к интернету или отключите блокировщики/VPN.');
           } else {
             toast.error(error.message);
           }
