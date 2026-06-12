@@ -17,6 +17,12 @@ import { ViewToggle, ViewMode } from '@/components/widget/ViewToggle';
 import { CalendarView, CalendarMode } from '@/components/widget/CalendarView';
 import { MobileCalendarView } from '@/components/widget/MobileCalendarView';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Картинки событий лежат в Supabase Storage; в проде гоним их через свой origin (/sb),
+// так как supabase.co напрямую недоступен части российских провайдеров.
+const proxiedImg = (u: string | null | undefined) =>
+  u ? u.replace('https://gupcgjwnattzhcsqecku.supabase.co', import.meta.env.DEV ? 'https://gupcgjwnattzhcsqecku.supabase.co' : `${window.location.origin}/sb`) : u;
+
 function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: () => void }) {
   const date = parseISO(event.start_at);
   const lt = event.lesson_type;
@@ -33,7 +39,7 @@ function EventCard({ event, onClick }: { event: EventWithLessonType; onClick: ()
           <div className="text-white text-2xl font-bold leading-none">{formatDay(date)}</div>
           <div className="text-white text-xs font-bold">{formatMonthShort(date)}</div>
         </div>
-        {event.image_url ? <img src={event.image_url} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)) }} />}
+        {event.image_url ? <img src={proxiedImg(event.image_url)} alt={event.title} className="w-full h-44 object-cover" /> : <div className="w-full h-44" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)) }} />}
       </div>
       <div className="p-4 flex-1 flex flex-col" style={{ backgroundColor: hexToRgba(lt.card_bg_color, Number(lt.card_bg_opacity)), color: lt.text_color }}>
         <div className="text-xs font-bold mb-1" style={{ color: lt.date_box_color }}>{lt.name.toUpperCase()}{event.mode && ` • ${event.mode.toUpperCase()}`}</div>
@@ -115,7 +121,7 @@ function EventPopup({ event, onClose }: { event: EventWithLessonType; onClose: (
           onClick={(e) => e.stopPropagation()}
         >
           <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white shadow-md transition-colors" style={{ color: '#000' }}><X className="w-5 h-5" /></button>
-          {event.image_url && <img src={event.image_url} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
+          {event.image_url && <img src={proxiedImg(event.image_url)} alt={event.title} className="w-full max-h-96 object-contain bg-muted" />}
           <div className="p-6 space-y-4">
             <div><span className="text-xs font-bold px-2 py-1" style={{ backgroundColor: lt.date_box_color, color: '#fff' }}>{lt.name.toUpperCase()}{event.mode && ` • ${event.mode.toUpperCase()}`}</span></div>
             <h2 className="text-2xl font-bold">{event.title}</h2>

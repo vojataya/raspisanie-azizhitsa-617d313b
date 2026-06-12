@@ -2,8 +2,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// В проде ходим в Supabase через свой origin (/sb), так как supabase.co напрямую недоступен части российских провайдеров.
+const SUPABASE_URL = import.meta.env.DEV
+  ? import.meta.env.VITE_SUPABASE_URL
+  : `${window.location.origin}/sb`;
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cGNnanduYXR0emhjc3FlY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1Nzk5NTIsImV4cCI6MjA4NDE1NTk1Mn0.7b3vnPPEGaJADA9WEpRQUIPXEkGQFtvsujjfYK_ejSQ";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
