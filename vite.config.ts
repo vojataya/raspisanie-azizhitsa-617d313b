@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/sb": {
+        target: "https://gupcgjwnattzhcsqecku.supabase.co",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/sb/, ""),
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
