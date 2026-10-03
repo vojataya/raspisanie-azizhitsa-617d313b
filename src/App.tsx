@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
 import AuthPage from "./pages/Auth";
+import ResetPasswordPage from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/Dashboard";
 import EventsList from "./pages/admin/EventsList";
 import EventForm from "./pages/admin/EventForm";
@@ -38,6 +39,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/admin" replace />} />
             <Route path="/auth" element={<AuthRedirect />} />
+            {/* Публичный маршрут: ссылка из письма создаёт сессию, поэтому он вне AuthRedirect и ProtectedRoute */}
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/schedule-widget" element={<ScheduleWidget />} />
             
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
