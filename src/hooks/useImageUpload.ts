@@ -1,6 +1,21 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { compressImage, formatBytes } from '@/lib/imageCompression';
+import {
+  EVENT_IMAGES_BUCKET,
+  eventImagePathFromUrl,
+  eventImagePublicUrl,
+  eventImageUploadOptions,
+  newEventImagePath,
+} from '@/lib/imageUrl';
+
+function fileExtension(file: File): string {
+  if (file.type === 'image/jpeg') return 'jpg';
+  const dot = file.name.lastIndexOf('.');
+  if (dot > 0) return file.name.slice(dot + 1);
+  return file.type.split('/')[1] || 'jpg';
+}
 
 export function useImageUpload() {
   const [uploading, setUploading] = useState(false);
@@ -8,22 +23,31 @@ export function useImageUpload() {
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       setUploading(true);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `events/${fileName}`;
+
+      // Сжимаем перед загрузкой: шлюз пропускает не больше 2,5 МБ на запрос.
+      let prepared;
+      try {
+        prepared = await compressImage(file);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Не удалось обработать файл');
+        return null;
+      }
+      if (prepared.changed) {
+        toast.success(`Фото сжато: ${formatBytes(prepared.originalBytes)} → ${formatBytes(prepared.finalBytes)}`);
+      }
+
+      const upload = prepared.file;
+      const filePath = newEventImagePath(fileExtension(upload));
 
       const { error: uploadError } = await supabase.storage
-        .from('event-images')
-        .upload(filePath, file);
+        .from(EVENT_IMAGES_BUCKET)
+        .upload(filePath, upload, eventImageUploadOptions(upload.type));
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('event-images')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
+      // В базу кладём канонический адрес (supabase.co), а не getPublicUrl():
+      // в проде клиент ходит через /sb текущего хостинга, и адрес привязался бы к домену.
+      return eventImagePublicUrl(filePath);
     } catch (error) {
       toast.error('Ошибка загрузки изображения');
       console.error('Upload error:', error);
@@ -35,14 +59,12 @@ export function useImageUpload() {
 
   const deleteImage = async (url: string): Promise<boolean> => {
     try {
-      // Extract the file path from the URL
-      const urlParts = url.split('/event-images/');
-      if (urlParts.length < 2) return false;
-      
-      const filePath = urlParts[1];
-      
+      // Путь файла после /event-images/ — одинаково для адресов supabase.co и <хостинг>/sb
+      const filePath = eventImagePathFromUrl(url);
+      if (!filePath) return false;
+
       const { error } = await supabase.storage
-        .from('event-images')
+        .from(EVENT_IMAGES_BUCKET)
         .remove([filePath]);
 
       if (error) throw error;

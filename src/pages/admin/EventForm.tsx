@@ -16,6 +16,7 @@ import {
 import { useEvent, useCreateEvent, useUpdateEvent } from '@/hooks/useEvents';
 import { useLessonTypes } from '@/hooks/useLessonTypes';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { toDisplayUrl } from '@/lib/imageUrl';
 import { ArrowLeft, Upload, X, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -322,7 +323,7 @@ export default function EventFormPage() {
               {formData.image_url && (
                 <div className="relative inline-block">
                   <img
-                    src={formData.image_url}
+                    src={toDisplayUrl(formData.image_url)}
                     alt="Preview"
                     className="max-w-xs h-40 object-cover rounded-lg"
                   />
