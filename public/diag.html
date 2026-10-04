@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Проверка связи · Расписание</title>
+<style>
+  :root { --bg:#ffffff; --fg:#111111; --muted:#555555; --line:#d0d0d0; --ok:#0b5cad; --bad:#b35900; --wait:#666666; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121212; --fg:#f2f2f2; --muted:#b0b0b0; --line:#3a3a3a; --ok:#6cb4ff; --bad:#ffb060; --wait:#aaaaaa; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px 40px; background:var(--bg); color:var(--fg); font:20px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width:760px; margin:0 auto; }
+  h1 { font-size:30px; margin:0 0 6px; }
+  p.lead { color:var(--muted); margin:0 0 22px; }
+  .row { border:2px solid var(--line); border-radius:12px; padding:14px 16px; margin:0 0 14px; }
+  .row .head { display:flex; gap:12px; align-items:flex-start; }
+  .icon { font-size:30px; line-height:1; width:36px; flex:none; text-align:center; font-weight:700; }
+  .name { font-size:23px; font-weight:700; }
+  .status { font-size:22px; font-weight:700; margin-top:2px; }
+  .details { color:var(--muted); font-size:18px; margin-top:4px; word-break:break-word; }
+  .ok { border-color:var(--ok); } .ok .status, .ok .icon { color:var(--ok); }
+  .bad { border-color:var(--bad); border-style:dashed; } .bad .status, .bad .icon { color:var(--bad); }
+  .wait .status, .wait .icon { color:var(--wait); }
+  #summary { font-size:24px; font-weight:700; margin:18px 0; }
+  footer { margin-top:26px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:17px; word-break:break-word; }
+  button { font:inherit; font-size:20px; padding:10px 18px; border-radius:10px; border:2px solid var(--fg); background:transparent; color:var(--fg); cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Проверка связи с сайтом расписания</h1>
+  <p class="lead">Страница по очереди проверяет, доходят ли запросы до данных и файлов сайта. Если что-то «не прошло» — пришлите снимок экрана этой страницы.</p>
+  <div id="checks"></div>
+  <div id="summary">Проверка идёт…</div>
+  <button type="button" id="again">Проверить ещё раз</button>
+  <footer id="foot"></footer>
+</main>
+<script>
+(function () {
+  var TIMEOUT_MS = 10000;
+  var CHECKS = [
+    { name: 'Данные через шлюз', url: '/sb/rest/v1/lesson_types?select=id&limit=1', method: 'GET', expect: 401,
+      hint: 'ожидается код 401 (запрос без ключа — значит, шлюз довёл запрос до базы)' },
+    { name: 'Supabase напрямую', url: 'https://gupcgjwnattzhcsqecku.supabase.co/rest/v1/', method: 'GET', expect: 401,
+      hint: 'ожидается код 401; «не прошло» здесь не страшно, если первая проверка прошла' },
+    { name: 'Файлы сайта', url: '/index.html', method: 'HEAD', expect: 200,
+      hint: 'ожидается код 200 (главная страница сайта из хранилища)' }
+  ];
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function render(i, state, statusText, details) {
+    var row = document.getElementById('check-' + i);
+    row.className = 'row ' + state;
+    row.querySelector('.icon').textContent = state === 'ok' ? '✓' : (state === 'bad' ? '✗' : '…');
+    row.querySelector('.status').textContent = statusText;
+    row.querySelector('.details').textContent = details;
+  }
+
+  function runOne(i) {
+    var c = CHECKS[i];
+    render(i, 'wait', 'Проверяется…', c.hint);
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, TIMEOUT_MS);
+    var t0 = performance.now();
+    var opts = { method: c.method, cache: 'no-store', credentials: 'omit' };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(c.url, opts).then(function (r) {
+      clearTimeout(timer);
+      var ms = Math.round(performance.now() - t0);
+      var passed = r.status === c.expect;
+      render(i, passed ? 'ok' : 'bad', passed ? 'Прошло' : 'Не прошло',
+        'HTTP ' + r.status + ' · ' + ms + ' мс · ' + c.hint);
+      return passed;
+    }, function (err) {
+      clearTimeout(timer);
+      var ms = Math.round(performance.now() - t0);
+      var why = (err && err.name === 'AbortError') ? 'нет ответа за ' + (TIMEOUT_MS / 1000) + ' с' : 'сетевая ошибка (' + (err && err.message ? err.message : err) + ')';
+      render(i, 'bad', 'Не прошло', 'HTTP — · ' + ms + ' мс · ' + why + ' · ' + c.hint);
+      return false;
+    });
+  }
+
+  function runAll() {
+    var box = document.getElementById('checks');
+    box.innerHTML = '';
+    CHECKS.forEach(function (c, i) {
+      var row = el('div', 'row wait'); row.id = 'check-' + i;
+      var head = el('div', 'head');
+      head.appendChild(el('div', 'icon', '…'));
+      var body = el('div');
+      body.appendChild(el('div', 'name', (i + 1) + '. ' + c.name));
+      body.appendChild(el('div', 'status', 'Ожидает'));
+      body.appendChild(el('div', 'details', c.hint));
+      head.appendChild(body); row.appendChild(head); box.appendChild(row);
+    });
+    var summary = document.getElementById('summary');
+    summary.textContent = 'Проверка идёт…';
+    var results = [];
+    var chain = Promise.resolve();
+    CHECKS.forEach(function (c, i) { chain = chain.then(function () { return runOne(i).then(function (ok) { results.push(ok); }); }); });
+    chain.then(function () {
+      var okCount = results.filter(Boolean).length;
+      summary.textContent = okCount === CHECKS.length ? '✓ Всё прошло (' + okCount + ' из ' + CHECKS.length + ')' : '✗ Прошло ' + okCount + ' из ' + CHECKS.length;
+      var now = new Date();
+      document.getElementById('foot').textContent = 'Дата и время: ' + now.toLocaleString('ru-RU') + ' · Адрес: ' + location.host + ' · Браузер: ' + navigator.userAgent;
+    });
+  }
+
+  document.getElementById('again').addEventListener('click', runAll);
+  runAll();
+})();
+</script>
+</body>
+</html>
