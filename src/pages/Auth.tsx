@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCheckInvite } from '@/hooks/useInvites';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { ForgotPasswordForm } from '@/components/ForgotPasswordForm';
 
 const authSchema = z.object({
   email: z.string().email('Введите корректный email'),
@@ -24,6 +25,11 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState('login');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Режим «Забыли пароль?»; со страницы /reset-password можно прийти сразу в него
+  const [forgotMode, setForgotMode] = useState(
+    () => (location.state as { forgotPassword?: boolean } | null)?.forgotPassword === true
+  );
   
   const { data: invite, isLoading: checkingInvite } = useCheckInvite(
     activeTab === 'register' ? email : ''
@@ -81,10 +87,13 @@ export default function AuthPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Админ-панель</CardTitle>
-          <CardDescription>Управление расписанием занятий</CardDescription>
+          <CardDescription>{forgotMode ? 'Восстановление пароля' : 'Управление расписанием занятий'}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          {forgotMode && (
+            <ForgotPasswordForm initialEmail={email} onBack={() => setForgotMode(false)} />
+          )}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className={forgotMode ? 'hidden' : undefined}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Вход</TabsTrigger>
               <TabsTrigger value="register">Регистрация</TabsTrigger>
@@ -121,6 +130,17 @@ export default function AuthPage() {
               >
                 {loading ? 'Вход...' : 'Войти'}
               </Button>
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-sm text-muted-foreground"
+                  onClick={() => setForgotMode(true)}
+                  disabled={loading}
+                >
+                  Забыли пароль?
+                </Button>
+              </div>
             </TabsContent>
             
             <TabsContent value="register" className="space-y-4 mt-4">
