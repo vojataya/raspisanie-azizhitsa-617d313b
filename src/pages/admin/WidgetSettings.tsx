@@ -5,13 +5,135 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useWidgetSettings, useUpdateWidgetSettings } from '@/hooks/useWidgetSettings';
-import { Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { Copy, Check, ImageDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useIsAdmin } from '@/hooks/useUserRole';
+import { useRecompressImages } from '@/hooks/useRecompressImages';
+import { formatBytes } from '@/lib/imageCompression';
+import type { RecompressPlan } from '@/lib/recompressExisting';
+
+function RecompressImagesCard() {
+  const { prepare, run, preparing, running, progress, report } = useRecompressImages();
+  const [plan, setPlan] = useState<RecompressPlan | null>(null);
+
+  // Пока идёт обработка, предупреждаем о закрытии вкладки.
+  useEffect(() => {
+    if (!running) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [running]);
+
+  const handlePrepare = async () => {
+    try {
+      const loaded = await prepare();
+      if (loaded.files.length === 0) {
+        toast.info('Загруженных фото не найдено');
+        return;
+      }
+      setPlan(loaded);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Не удалось получить список фото');
+    }
+  };
+
+  const handleRun = async () => {
+    if (!plan) return;
+    const current = plan;
+    setPlan(null);
+    try {
+      const result = await run(current);
+      if (result.errors.length === 0) toast.success('Готово: фото обработаны');
+      else toast.warning(`Готово, но с ошибками: ${result.errors.length}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Ошибка при сжатии фото');
+    }
+  };
+
+  const eventsInPlan = plan ? plan.files.reduce((sum, f) => sum + f.events.length, 0) : 0;
+  const percent = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Сжатие загруженных фото</CardTitle>
+        <CardDescription>Разовая обработка фото, которые загрузили раньше</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Фото больше 1 МБ будут бережно уменьшены (до 2000 px по длинной стороне) и сохранены новыми файлами — виджет станет
+          открываться быстрее. Оригиналы остаются в хранилище. Заодно адреса картинок приводятся к единому виду. Запускать
+          можно повторно: уже обработанные фото пропускаются.
+        </p>
+        <Button variant="outline" onClick={handlePrepare} disabled={preparing || running}>
+          <ImageDown className="w-4 h-4 mr-2" />
+          {preparing ? 'Считаю фото...' : running ? 'Обработка...' : 'Сжать уже загруженные фото'}
+        </Button>
+
+        {progress && (running || report) && (
+          <div className="space-y-2">
+            <Progress value={percent} className="h-2" />
+            <p className="text-sm text-muted-foreground">Обработано {progress.done} из {progress.total}</p>
+          </div>
+        )}
+
+        {report && !running && (
+          <div className="space-y-2 rounded-lg bg-muted p-4 text-sm">
+            <p className="font-medium">
+              Сжато {report.compressedFiles} фото: {formatBytes(report.bytesBefore)} → {formatBytes(report.bytesAfter)}; адресов
+              исправлено {report.addressesFixed}; ошибок {report.errors.length}
+            </p>
+            {report.errors.length > 0 && (
+              <ul className="list-disc space-y-1 pl-5 text-destructive">
+                {report.errors.map((err, i) => (
+                  <li key={`${err.path}-${i}`} className="break-all">
+                    {err.path}: {err.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </CardContent>
+
+      <AlertDialog open={!!plan} onOpenChange={(open) => { if (!open) setPlan(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Сжать загруженные фото?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Будет проверено файлов: {plan?.files.length ?? 0} (используются в событиях: {eventsInPlan}). Фото больше 1 МБ
+              сожмутся и загрузятся новыми файлами, оригиналы останутся в хранилище. Не закрывайте страницу до окончания.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRun}>Запустить</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
+}
 
 export default function WidgetSettingsPage() {
   const { data: settings, isLoading } = useWidgetSettings();
   const updateSettings = useUpdateWidgetSettings();
+  const { isAdmin } = useIsAdmin();
   const [copied, setCopied] = useState(false);
 
   const publishedUrl = 'https://raspisanie-azizhitsa.lovable.app/schedule-widget';
@@ -56,6 +178,8 @@ export default function WidgetSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isAdmin && <RecompressImagesCard />}
       </div>
     </AdminLayout>
   );
